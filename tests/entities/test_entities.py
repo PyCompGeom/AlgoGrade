@@ -9,7 +9,7 @@ class MockGrader(Grader):
     ]
 
     @classmethod
-    def grading_methods(cls):
+    def grade_methods(cls):
         return [
             cls.grade_default,
             cls.grade_default,

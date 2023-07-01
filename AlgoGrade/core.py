@@ -55,7 +55,7 @@ class Grader:
         mistake_lists = [
             grading_method(answer, correct_answer, grade_params)
             for grading_method, answer, correct_answer, grade_params
-            in zip(cls.grading_methods(), answers, correct_answers, cls.grade_params)
+            in zip(cls.grade_methods(), answers, correct_answers, cls.grade_params)
         ]
         mistake_counters = [Counter(mistakes) for mistakes in mistake_lists]
         mistake_fines_dicts = [
@@ -80,7 +80,7 @@ class Grader:
         return [] if answer == correct_answer else [Mistake(grade_params, description="Items don't match")]
     
     @classmethod
-    def grade_iterable(cls, answer, correct_answer, grade_params, grade_item=None, item_mistake_description=""):
+    def grade_iterable(cls, answer, correct_answer, grade_params, grade_item=None, item_mistake_text=""):
         if grade_item is None:
             grade_item = cls.grade_default
 
@@ -89,11 +89,49 @@ class Grader:
             return [Mistake(grade_params, description="Too many items")] * len_diff
 
         return [
-            Mistake(grade_params, description=item_mistake_description)
+            Mistake(grade_params, description=item_mistake_text)
             for a, c in zip(answer, correct_answer)
             if grade_item(a, c, grade_params) != []
         ]
 
     @classmethod
-    def grading_methods(cls):
+    def grade_bin_tree(cls, answer, correct_answer, grade_params, grade_item=None, item_mistake_text=""):
+        if grade_item is None:
+            grade_item = cls.grade_default
+        
+        return cls._find_mistakes_in_bin_tree(answer.root, correct_answer.root, grade_params, grade_item, item_mistake_text)
+
+    @classmethod
+    def _find_mistakes_in_bin_tree(
+        cls, node, correct_node, grade_params,
+        grade_item=None, item_mistake_text="", mistakes=None, extra=None, missing=None
+    ):
+        if mistakes is None:
+            mistakes = []
+        if extra is None:
+            extra = []
+        if missing is None:
+            missing = []
+        
+        if grade_item(node, correct_node, grade_params) != []:
+            mistakes.append(Mistake(grade_params, item_mistake_text))
+        
+        if node.left and correct_node.left:
+            cls._find_mistakes_in_bin_tree(node.left, correct_node.left, grade_params, grade_item, item_mistake_text, mistakes, extra, missing)
+        if node.left and not correct_node.left:
+            extra.extend(Mistake(grade_params, "Extra item") for _ in node.left.traverse_preorder()[1:])
+        if not node.left and correct_node.left:
+            missing.extend(Mistake(grade_params, "Missing item") for _ in correct_node.left.traverse_preorder()[1:])
+
+        if node.right and correct_node.right:
+            cls._find_mistakes_in_bin_tree(node.right, correct_node.right, grade_params, grade_item, item_mistake_text, mistakes, extra, missing)
+        if node.right and not correct_node.right:
+            extra.extend(Mistake(grade_params, "Extra item") for _ in node.right.traverse_preorder()[1:])
+        if not node.right and correct_node.right:
+            missing.extend(Mistake(grade_params, "Missing item") for _ in correct_node.right.traverse_preorder()[1:])
+        
+        return mistakes + extra + missing
+
+    @classmethod
+    def grade_methods(cls):
         return [cls.grade_default for _ in cls.grade_params]

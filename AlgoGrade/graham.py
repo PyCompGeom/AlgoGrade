@@ -20,7 +20,7 @@ class GrahamGrader(Grader):
     ]
 
     @classmethod
-    def grading_methods(cls):
+    def grade_methods(cls):
         return [
             cls.grade_default,
             cls.grade_iterable,
@@ -34,7 +34,7 @@ class GrahamGrader(Grader):
     
     @classmethod
     def grade_angles_less_than_pi(cls, answer, correct_answer, grade_params):
-        res = [
+        return [
             Mistake(grade_params)
             for row, next_row in zip(answer, answer[1:])
             if row.is_angle_less_than_pi and (
@@ -43,12 +43,11 @@ class GrahamGrader(Grader):
                 next_row.point_triple[2] != cls._next_point(answer.ordered_points, row.point_triple[2])
             )
         ]
-        return res
     
     @classmethod
     def grade_angles_greater_than_or_equal_to_pi(cls, answer, correct_answer, grade_params):
-        res = [
-            Mistake(grade_params, str(answer.index(row)))
+        return [
+            Mistake(grade_params)
             for row, next_row in zip(answer, answer[1:])
             if not row.is_angle_less_than_pi and (
                 (
@@ -63,7 +62,6 @@ class GrahamGrader(Grader):
                 )
             )
         ]
-        return res
 
     @classmethod
     def grade_finalization(cls, answer, correct_answer, grade_params):
