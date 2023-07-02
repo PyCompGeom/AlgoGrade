@@ -1,3 +1,4 @@
+from copy import deepcopy
 from math import isclose
 from PyCompGeomAlgorithms.core import Point
 from PyCompGeomAlgorithms.graham import GrahamStepsTable, GrahamStepsTableRow
@@ -70,7 +71,7 @@ def test_graham_grader_all_correct():
 
 def test_graham_grader_incorrect_centroid():
     correct_answers = task.correct_answers
-    answers = correct_answers[:]
+    answers = deepcopy(correct_answers)
     answers[0] = Point(100, 100)
 
     total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers)
@@ -79,7 +80,7 @@ def test_graham_grader_incorrect_centroid():
 
 def test_graham_grader_incorrect_ordered_points():
     correct_answers = task.correct_answers
-    answers = correct_answers[:]
+    answers = deepcopy(correct_answers)
     answers[1] = [
         Point(2000, 2000),
         Point(5000, 5000),
@@ -99,7 +100,7 @@ def test_graham_grader_incorrect_ordered_points():
 
 def test_graham_grader_incorrect_origin():
     correct_answers = task.correct_answers
-    answers = correct_answers[:]
+    answers = deepcopy(correct_answers)
     answers[2] = Point(100, 100)
 
     total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers)
@@ -108,7 +109,7 @@ def test_graham_grader_incorrect_origin():
 
 def test_graham_grader_incorrect_triples():
     correct_answers = task.correct_answers
-    answers = correct_answers[:]
+    answers = deepcopy(correct_answers)
     ordered = answers[1]
     answers[3] = [
         (ordered[0], ordered[0], ordered[0]),
@@ -131,7 +132,7 @@ def test_graham_grader_incorrect_triples():
 
 def test_graham_grader_incorrect_are_angles_less_than_pi():
     correct_answers = task.correct_answers
-    answers = correct_answers[:]
+    answers = deepcopy(correct_answers)
     answers[4] = [False for _ in answers[4]]
 
     total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers)
@@ -140,7 +141,7 @@ def test_graham_grader_incorrect_are_angles_less_than_pi():
 
 def test_graham_grader_incorrect_rows_with_angles_less_than_pi():
     correct_answers = task.correct_answers
-    answers = correct_answers[:]
+    answers = deepcopy(correct_answers)
     ordered = answers[1]
     incorrect_point = Point(1000, 1000)
 
@@ -153,7 +154,7 @@ def test_graham_grader_incorrect_rows_with_angles_less_than_pi():
 
 def test_graham_grader_incorrect_rows_with_angles_not_less_than_pi_single():
     correct_answers = task.correct_answers
-    answers = correct_answers[:]
+    answers = deepcopy(correct_answers)
     ordered = answers[1]
     incorrect_point = Point(1000, 1000)
 
@@ -165,7 +166,7 @@ def test_graham_grader_incorrect_rows_with_angles_not_less_than_pi_single():
 
 def test_graham_grader_incorrect_rows_with_angles_not_less_than_pi_repeated():
     correct_answers = task.correct_answers
-    answers = correct_answers[:]
+    answers = deepcopy(correct_answers)
     incorrect_point = Point(1000, 1000)
 
     answers[5][1] = GrahamStepsTableRow((incorrect_point, incorrect_point, incorrect_point), True)
@@ -177,7 +178,7 @@ def test_graham_grader_incorrect_rows_with_angles_not_less_than_pi_repeated():
 
 def test_graham_grader_incorrect_finalization():
     correct_answers = task.correct_answers
-    answers = correct_answers[:]
+    answers = deepcopy(correct_answers)
     ordered = answers[1]
     answers[6][7] = GrahamStepsTableRow((ordered[5], ordered[0], ordered[7]), True)
 
