@@ -21,10 +21,10 @@ class QuickhullGrader(Grader):
     def grade_methods(cls):
         return [
             cls.grade_iterable,
-            partial(cls.grade_bin_tree, grade_item=lambda a, c, gp: cls.grade_default(a.h, c.h, gp)),
-            partial(cls.grade_bin_tree, grade_item=lambda a, c, gp: cls.grade_iterable(a.points, c.points, gp)),
+            partial(cls.grade_bin_tree, grade_item_method=lambda a, c, gp: cls.grade_default(a.h, c.h, gp)),
+            partial(cls.grade_bin_tree, grade_item_method=lambda a, c, gp: cls.grade_iterable(a.points, c.points, gp)),
             cls.grade_finalization,
-            partial(cls.grade_bin_tree, grade_item=lambda a, c, gp: cls.grade_iterable(a.subhull, c.subhull, gp))
+            partial(cls.grade_bin_tree, grade_item_method=lambda a, c, gp: cls.grade_iterable(a.subhull, c.subhull, gp))
         ]
     
     @classmethod
