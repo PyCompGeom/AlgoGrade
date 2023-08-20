@@ -6,9 +6,9 @@ class Task:
     description = ""
     algorithm = None
 
-    def __init__(self, input):
-        self.input = input
-        self.correct_answers = list(self.__class__.algorithm(input))
+    def __init__(self, *inputs):
+        self.inputs = inputs
+        self.correct_answers = list(self.__class__.algorithm(*inputs))
 
 
 class Mistake:
@@ -86,7 +86,7 @@ class Grader:
         if callable(grade_item_method):
             grade_item_method = [grade_item_method] * len(correct_answer)
         elif not isinstance(grade_item_method, Iterable):
-            raise TypeError(f"grade_item should be either a grading method, or an iterable of grading methods for each item, or None (defaults to default_grading)")
+            raise TypeError(f"grade_item_method should be either a grading method, or an iterable of grading methods for each item, or None (defaults to default_grading)")
 
         len_diff = len(correct_answer) - len(answer)
         if len_diff == 0:
@@ -116,8 +116,7 @@ class Grader:
         if missing is None:
             missing = []
         
-        if grade_item_method(node, correct_node, grade_params) != []:
-            mistakes.append(Mistake(grade_params, item_mistake_text))
+        mistakes.extend(grade_item_method(node, correct_node, grade_params))
         
         if node.left and correct_node.left:
             cls._find_mistakes_in_bin_tree(node.left, correct_node.left, grade_params, grade_item_method, item_mistake_text, mistakes, extra, missing)

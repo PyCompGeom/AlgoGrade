@@ -8,7 +8,7 @@ def test_point_adapter():
     coords = 1, 2, 3
     adapter = PointPydanticAdapter(coords=coords)
     regular = Point(*coords)
-    assert adapter.to_regular_object() == regular
+    assert adapter.regular_object == regular
 
 
 @fixture
@@ -28,13 +28,13 @@ def regular_root():
 
 
 def test_bin_tree_node_adapter(adapter_root, regular_root):
-    assert adapter_root.to_regular_object() == regular_root
+    assert adapter_root.regular_object == regular_root
 
 
 def test_bin_tree_adapter(adapter_root, regular_root):
     adapter_tree = BinTreePydanticAdapter(root=adapter_root)
     regular_tree = BinTree(regular_root)
-    assert adapter_tree.to_regular_object() == regular_tree
+    assert adapter_tree.regular_object == regular_tree
 
 
 @fixture
@@ -89,20 +89,20 @@ def regular_tbt_root(regular_tbt_root_circular):
 
 
 def test_threaded_bin_tree_node_adapter(adapter_tbt_root, regular_tbt_root):
-    assert adapter_tbt_root.to_regular_object() == regular_tbt_root
+    assert adapter_tbt_root.regular_object == regular_tbt_root
 
 
 def test_threaded_bin_tree_adapter(adapter_tbt_root, regular_tbt_root):
     adapter_tbt = ThreadedBinTreePydanticAdapter(root=adapter_tbt_root)
     regular_tbt = ThreadedBinTree(regular_tbt_root)
-    assert adapter_tbt.to_regular_object() == regular_tbt
+    assert adapter_tbt.regular_object == regular_tbt
 
 
 def test_threaded_bin_tree_node_adapter_circular(adapter_tbt_root_circular, regular_tbt_root_circular):
-    assert adapter_tbt_root_circular.to_regular_object() == regular_tbt_root_circular
+    assert adapter_tbt_root_circular.regular_object == regular_tbt_root_circular
 
 
 def test_threaded_bin_tree_adapter_circular(adapter_tbt_root_circular, regular_tbt_root_circular):
     adapter_tbt = ThreadedBinTreePydanticAdapter(root=adapter_tbt_root_circular)
     regular_tbt = ThreadedBinTree(regular_tbt_root_circular)
-    assert adapter_tbt.to_regular_object() == regular_tbt
+    assert adapter_tbt.regular_object == regular_tbt
