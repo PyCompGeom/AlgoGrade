@@ -1,7 +1,7 @@
 from math import isclose
 from copy import deepcopy
 from PyCompGeomAlgorithms.core import Point
-from PyCompGeomAlgorithms.dynamic_hull import DynamicHullNode, DynamicHullTree, SubHullThreadedBinTree, PathDirection
+from PyCompGeomAlgorithms.dynamic_hull import DynamicHullNode, DynamicHullTree, SubhullThreadedBinTree, PathDirection
 from AlgoGrade.dynamic_hull import DynamicHullTask, DynamicHullGrader
 
 
@@ -20,24 +20,24 @@ def test_dynamic_hull_grader_all_correct():
     
     optimized_tree = deepcopy(tree)
     optimized_tree.root.optimized_subhull = optimized_tree.root.subhull
-    optimized_tree.root.left.optimized_subhull = SubHullThreadedBinTree.empty()
-    optimized_tree.root.left.left.optimized_subhull = SubHullThreadedBinTree.empty()
-    optimized_tree.root.left.right.optimized_subhull = SubHullThreadedBinTree.empty()
-    optimized_tree.root.right.optimized_subhull = SubHullThreadedBinTree.empty()
+    optimized_tree.root.left.optimized_subhull = SubhullThreadedBinTree.empty()
+    optimized_tree.root.left.left.optimized_subhull = SubhullThreadedBinTree.empty()
+    optimized_tree.root.left.right.optimized_subhull = SubhullThreadedBinTree.empty()
+    optimized_tree.root.right.optimized_subhull = SubhullThreadedBinTree.empty()
     
     leaves = [root.left.left, root.left.right, root.right]
     path = [PathDirection.right]
     hull = [p1, p2, point_to_insert, p3]
 
     optimized_tree2 = deepcopy(optimized_tree)
-    optimized_tree2.root.subhull = SubHullThreadedBinTree.from_iterable(hull)
+    optimized_tree2.root.subhull = SubhullThreadedBinTree.from_iterable(hull)
     optimized_tree2.root.optimized_subhull = optimized_tree2.root.subhull
     optimized_tree2.root.right = DynamicHullNode(point_to_insert, [point_to_insert, p3])
-    optimized_tree2.root.right.optimized_subhull = SubHullThreadedBinTree.empty()
+    optimized_tree2.root.right.optimized_subhull = SubhullThreadedBinTree.empty()
     optimized_tree2.root.right.left = DynamicHullNode.leaf(point_to_insert)
-    optimized_tree2.root.right.left.optimized_subhull = SubHullThreadedBinTree.empty()
+    optimized_tree2.root.right.left.optimized_subhull = SubhullThreadedBinTree.empty()
     optimized_tree2.root.right.right = DynamicHullNode.leaf(p3)
-    optimized_tree2.root.right.right.optimized_subhull = SubHullThreadedBinTree.empty()
+    optimized_tree2.root.right.right.optimized_subhull = SubhullThreadedBinTree.empty()
 
     answers = [
         leaves,
@@ -124,8 +124,8 @@ def test_dynamic_hull_grader_incorrect_omitted_points():
     
     answers[2], correct_answers[2] = deepcopy(answers[2]), deepcopy(correct_answers[2])
     dummy_point = Point(0, 0)
-    answers[2].root.left.subhull = SubHullThreadedBinTree.from_iterable([p1, p2, dummy_point])
-    correct_answers[2].root.left.subhull = SubHullThreadedBinTree.from_iterable([p1, p2, dummy_point])
+    answers[2].root.left.subhull = SubhullThreadedBinTree.from_iterable([p1, p2, dummy_point])
+    correct_answers[2].root.left.subhull = SubhullThreadedBinTree.from_iterable([p1, p2, dummy_point])
     answers[2].root.subhull.root.point = dummy_point
 
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)

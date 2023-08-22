@@ -1,5 +1,7 @@
+from typing import ClassVar
+from PyCompGeomAlgorithms.graham import graham, GrahamStepsTableRow, GrahamStepsTable
+from .adapters import PydanticAdapter, PointPydanticAdapter
 from .core import Task, Grader, GradeParams, Mistake
-from PyCompGeomAlgorithms.graham import graham
 
 
 class GrahamTask(Task):
@@ -58,7 +60,7 @@ class GrahamGrader(Grader):
                 (
                     row.point_triple[0] != next_row.point_triple[1] or
                     row.point_triple[2] != next_row.point_triple[2] or
-                    next_row.point_triple[0] != cls._prev_point(answer, next_row)
+                    next_row.point_triple[0] != cls._prev_point(answer.rows, next_row)
                 )
             )
         ]
@@ -86,3 +88,15 @@ class GrahamGrader(Grader):
             return ordered_points[(ordered_points.index(point)+1) % len(ordered_points)]
         except (IndexError, ValueError):
             return None
+
+
+class GrahamStepsTableRowPydanticAdapter(PydanticAdapter):
+    regular_class: ClassVar[type] = GrahamStepsTableRow
+    point_triple: tuple[PointPydanticAdapter, PointPydanticAdapter, PointPydanticAdapter]
+    is_angle_less_than_pi: bool
+
+
+class GrahamStepsTablePydanticAdapter(PydanticAdapter):
+    regular_class: ClassVar[type] = GrahamStepsTable
+    ordered_points: list[PointPydanticAdapter]
+    rows: list[GrahamStepsTableRowPydanticAdapter]

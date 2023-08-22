@@ -1,6 +1,8 @@
-from functools import partial
+from functools import partial, cached_property
+from typing import ClassVar, Optional
+from .adapters import PointPydanticAdapter, BinTreeNodePydanticAdapter
 from .core import Task, Grader, GradeParams, Mistake
-from PyCompGeomAlgorithms.quickhull import quickhull
+from PyCompGeomAlgorithms.quickhull import quickhull, QuickhullNode
 
 
 class QuickhullTask(Task):
@@ -30,3 +32,9 @@ class QuickhullGrader(Grader):
     @classmethod
     def grade_finalization(cls, answer, correct_answer, grade_params):
         return [Mistake(grade_params) for node in answer.traverse_preorder() if not node.is_leaf and len(node.points) == 2]
+
+
+class QuickhullNodePydanticAdapter(BinTreeNodePydanticAdapter):
+    regular_class: ClassVar[type] = QuickhullNode
+    h: Optional[PointPydanticAdapter] = None
+    subhull: list[PointPydanticAdapter]

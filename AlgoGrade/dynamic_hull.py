@@ -1,5 +1,7 @@
 from functools import partial
-from PyCompGeomAlgorithms.dynamic_hull import upper_dynamic_hull
+from typing import ClassVar, Optional
+from PyCompGeomAlgorithms.dynamic_hull import upper_dynamic_hull, DynamicHullNode, DynamicHullTree, SubhullNode, SubhullThreadedBinTree
+from .adapters import PointPydanticAdapter, BinTreeNodePydanticAdapter, BinTreePydanticAdapter, ThreadedBinTreeNodePydanticAdapter, ThreadedBinTreePydanticAdapter
 from .core import Task, Grader, GradeParams, Mistake
 
 
@@ -78,3 +80,26 @@ class DynamicHullGrader(Grader):
             return []
         
         return cls.grade_bin_tree(answer, correct_answer, grade_params, grade_item_method)
+
+
+class DynamicHullNodePydanticAdapter(BinTreeNodePydanticAdapter):
+    regular_class: ClassVar[type] = DynamicHullNode
+    subhull_points: list[PointPydanticAdapter]
+    optimized_subhull_points: Optional[list[PointPydanticAdapter]] = None
+    left_supporting_index: int = 0
+    left_supporting: PointPydanticAdapter
+    right_supporting: PointPydanticAdapter
+
+
+class DynamicHullTreePydanticAdapter(BinTreePydanticAdapter):
+    regular_class: ClassVar[type] = DynamicHullTree
+    root: DynamicHullNodePydanticAdapter
+
+
+class SubhullNodePydanticAdapter(ThreadedBinTreeNodePydanticAdapter):
+    regular_class: ClassVar[type] = SubhullNode
+
+
+class SubhullThreadedBinTreePydanticAdapter(ThreadedBinTreePydanticAdapter):
+    regular_class: ClassVar[type] = SubhullThreadedBinTree
+    root: SubhullNodePydanticAdapter
