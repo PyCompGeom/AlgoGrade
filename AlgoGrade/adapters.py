@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar, Optional, Iterable
 from pydantic import BaseModel
 from PyCompGeomAlgorithms.core import Point, BinTreeNode, BinTree, ThreadedBinTreeNode, ThreadedBinTree
 
@@ -10,10 +10,21 @@ class PydanticAdapter(BaseModel):
     @cached_property
     def regular_object(self):
         return self.regular_class(**{
-            field: value.regular_object if isinstance(value, self.__class__) else value
+            field: self._regular_object(value)
             for field, value in self.__dict__.items()
         })
     
+    @classmethod
+    def _regular_object(cls, obj):
+        if isinstance(obj, PydanticAdapter):
+            return obj.regular_object
+        if isinstance(obj, dict):
+            return {cls._regular_object(key): cls._regular_object(value) for key, value in obj.items()}
+        if isinstance(obj, Iterable):
+            return obj.__class__(cls._regular_object(item) for item in obj)
+        
+        return obj
+
     def __eq__(self, other):
         return self.regular_object == (other.regular_object if isinstance(other, self.__class__) else other)
 
