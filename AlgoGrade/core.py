@@ -2,13 +2,14 @@ from math import inf
 from collections import Counter
 from typing import Iterable
 
+
 class Task:
     description = ""
     algorithm = None
 
     def __init__(self, *inputs):
         self.inputs = inputs
-        self.correct_answers = list(self.__class__.algorithm(*inputs))
+        self.correct_answers = list(self.algorithm(*inputs))
 
 
 class Mistake:
