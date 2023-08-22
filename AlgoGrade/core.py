@@ -9,7 +9,7 @@ class Task:
 
     def __init__(self, *inputs):
         self.inputs = inputs
-        self.correct_answers = list(self.algorithm(*inputs))
+        self.correct_answers = list(self.__class__.algorithm(*inputs))
 
 
 class Mistake:
