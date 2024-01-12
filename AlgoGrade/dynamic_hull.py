@@ -1,7 +1,8 @@
 from functools import partial
 from typing import ClassVar, Optional
+from PyCompGeomAlgorithms.core import BinTree, BinTreeNode, ThreadedBinTree, ThreadedBinTreeNode
 from PyCompGeomAlgorithms.dynamic_hull import upper_dynamic_hull, DynamicHullNode, DynamicHullTree, SubhullNode, SubhullThreadedBinTree
-from .adapters import PointPydanticAdapter, BinTreeNodePydanticAdapter, BinTreePydanticAdapter, ThreadedBinTreeNodePydanticAdapter, ThreadedBinTreePydanticAdapter
+from .adapters import pycga_to_pydantic, PointPydanticAdapter, BinTreeNodePydanticAdapter, BinTreePydanticAdapter, ThreadedBinTreeNodePydanticAdapter, ThreadedBinTreePydanticAdapter
 from .core import Task, Grader, GradeParams, Mistake
 
 
@@ -90,16 +91,40 @@ class DynamicHullNodePydanticAdapter(BinTreeNodePydanticAdapter):
     left_supporting: PointPydanticAdapter
     right_supporting: PointPydanticAdapter
 
+    @classmethod
+    def from_regular_object(cls, obj: DynamicHullNode, **kwargs):
+        return super().from_regular_object(
+            obj,
+            subhull_points=pycga_to_pydantic(node.point for node in obj.subhull.traverse_inorder()),
+            optimized_subhull_points=pycga_to_pydantic(node.point for node in obj.optimized_subhull.traverse_inorder()),
+            left_supporting_index=obj.left_supporting_index,
+            left_supporting=pycga_to_pydantic(obj.left_supporting),
+            right_supporting=pycga_to_pydantic(obj.right_supporting),
+            **kwargs
+        )
+
 
 class DynamicHullTreePydanticAdapter(BinTreePydanticAdapter):
     regular_class: ClassVar[type] = DynamicHullTree
     root: DynamicHullNodePydanticAdapter
 
+    @classmethod
+    def from_regular_object(cls, obj: DynamicHullTree, **kwargs):
+        return super().from_regular_object(obj, **kwargs)
+
 
 class SubhullNodePydanticAdapter(ThreadedBinTreeNodePydanticAdapter):
     regular_class: ClassVar[type] = SubhullNode
+
+    @classmethod
+    def from_regular_object(cls, obj: SubhullNode, **kwargs):
+        return super().from_regular_object(obj, **kwargs)
 
 
 class SubhullThreadedBinTreePydanticAdapter(ThreadedBinTreePydanticAdapter):
     regular_class: ClassVar[type] = SubhullThreadedBinTree
     root: SubhullNodePydanticAdapter
+
+    @classmethod
+    def from_regular_object(cls, obj: SubhullThreadedBinTree, **kwargs):
+        return super().from_regular_object(obj, **kwargs)

@@ -16,6 +16,7 @@ def test_steps_table_row_adapter():
     regular_object = GrahamStepsTableRow((Point(1, 1), Point(2, 2), Point(3, 3)), True)
 
     assert adapter.regular_object == regular_object
+    assert GrahamStepsTableRowPydanticAdapter.from_regular_object(regular_object) == adapter
 
 
 def test_steps_table_adapter():
@@ -38,3 +39,4 @@ def test_steps_table_adapter():
     )
 
     assert adapter.regular_object == regular_object
+    assert GrahamStepsTablePydanticAdapter.from_regular_object(regular_object) == adapter

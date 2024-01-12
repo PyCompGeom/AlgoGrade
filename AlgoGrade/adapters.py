@@ -1,11 +1,18 @@
 from functools import cached_property
-from typing import Any, ClassVar, Optional, Iterable
+from typing import Any, ClassVar, Optional, Iterable, Generator
 from pydantic import BaseModel
-from PyCompGeomAlgorithms.core import Point, BinTreeNode, BinTree, ThreadedBinTreeNode, ThreadedBinTree
+from PyCompGeomAlgorithms.core import PyCGAObject, Point, BinTreeNode, BinTree, ThreadedBinTreeNode, ThreadedBinTree
+from PyCompGeomAlgorithms.dynamic_hull import DynamicHullNode, DynamicHullTree, SubhullNode, SubhullThreadedBinTree
+from PyCompGeomAlgorithms.graham import GrahamStepsTableRow, GrahamStepsTable
+from PyCompGeomAlgorithms.quickhull import QuickhullNode
 
 
 class PydanticAdapter(BaseModel):
     regular_class: ClassVar[type] = object
+
+    @classmethod
+    def from_regular_object(cls, obj, **kwargs):
+        raise NotImplementedError
 
     @cached_property
     def regular_object(self):
@@ -20,18 +27,26 @@ class PydanticAdapter(BaseModel):
             return obj.regular_object
         if isinstance(obj, dict):
             return {cls._regular_object(key): cls._regular_object(value) for key, value in obj.items()}
-        if isinstance(obj, Iterable):
-            return obj.__class__(cls._regular_object(item) for item in obj)
+        if isinstance(obj, Iterable) and not isinstance(obj, str):
+            generator = (cls._regular_object(item) for item in obj)
+            return generator if isinstance(obj, Generator) else obj.__class__(generator)
         
         return obj
 
     def __eq__(self, other):
         return self.regular_object == (other.regular_object if isinstance(other, self.__class__) else other)
+    
+    def __hash__(self):
+        return hash(self.regular_object)
 
 
 class PointPydanticAdapter(PydanticAdapter):
     regular_class: ClassVar[type] = Point
     coords: tuple[float, ...]
+
+    @classmethod
+    def from_regular_object(cls, obj: Point, **kwargs):
+        return cls(coords=obj.coords, **kwargs)
 
     @cached_property
     def regular_object(self):
@@ -44,10 +59,23 @@ class BinTreeNodePydanticAdapter(PydanticAdapter):
     left: Optional[Any] = None
     right: Optional[Any] = None
 
+    @classmethod
+    def from_regular_object(cls, obj: BinTreeNode, **kwargs):
+        return cls(
+            data=pycga_to_pydantic(obj.data),
+            left=pycga_to_pydantic(obj.left),
+            right=pycga_to_pydantic(obj.right),
+            **kwargs
+        )
+
 
 class BinTreePydanticAdapter(PydanticAdapter):
     regular_class: ClassVar[type] = BinTree
     root: BinTreeNodePydanticAdapter
+
+    @classmethod
+    def from_regular_object(cls, obj: BinTree, **kwargs):
+        return cls(root=pycga_to_pydantic(obj.root), **kwargs)
 
 
 class ThreadedBinTreeNodePydanticAdapter(BinTreeNodePydanticAdapter):
@@ -62,11 +90,24 @@ class ThreadedBinTreeNodePydanticAdapter(BinTreeNodePydanticAdapter):
             self.left.regular_object if self.left else None,
             self.right.regular_object if self.right else None
         )
+    
+    @classmethod
+    def from_regular_object(cls, obj: ThreadedBinTreeNode, **kwargs):
+        return super().from_regular_object(
+            obj,
+            prev=pycga_to_pydantic(obj.prev),
+            next=pycga_to_pydantic(obj.next),
+            **kwargs
+        )
         
 
 class ThreadedBinTreePydanticAdapter(BinTreePydanticAdapter):
     regular_class: ClassVar[type] = ThreadedBinTree
     root: ThreadedBinTreeNodePydanticAdapter
+
+    @classmethod
+    def from_regular_object(cls, obj: ThreadedBinTree, **kwargs):
+        return super().from_regular_object(obj, **kwargs)
 
     @cached_property
     def regular_object(self):
@@ -78,3 +119,54 @@ class ThreadedBinTreePydanticAdapter(BinTreePydanticAdapter):
         regular_root = self.root.regular_object
 
         return self.regular_class.from_iterable([node.data for node in regular_root.traverse_inorder()], is_circular)
+
+
+def pydantic_to_pycga(obj: Any | PydanticAdapter | Iterable):    
+    if isinstance(obj, PydanticAdapter):
+        return obj.regular_object
+
+    if isinstance(obj, dict):
+        return {pydantic_to_pycga(key): pydantic_to_pycga(value) for key, value in obj.items()}
+    
+    if isinstance(obj, Iterable) and not isinstance(obj, str):
+        generator = (pydantic_to_pycga(obj) for obj in obj)
+        return generator if isinstance(obj, Generator) else obj.__class__(generator)
+    
+    return obj
+
+
+def pycga_to_pydantic(obj: Any | type | PyCGAObject | Iterable):
+    if isinstance(obj, type):
+        try:
+            from .dynamic_hull import DynamicHullNodePydanticAdapter, DynamicHullTreePydanticAdapter, SubhullNodePydanticAdapter, SubhullThreadedBinTreePydanticAdapter
+            from .graham import GrahamStepsTableRowPydanticAdapter, GrahamStepsTablePydanticAdapter
+            from .quickhull import QuickhullNodePydanticAdapter
+            
+            return {
+                Point: PointPydanticAdapter,
+                BinTreeNode: BinTreeNodePydanticAdapter,
+                BinTree: BinTreePydanticAdapter,
+                ThreadedBinTreeNode: ThreadedBinTreeNodePydanticAdapter,
+                ThreadedBinTree: ThreadedBinTreePydanticAdapter,
+                DynamicHullNode: DynamicHullNodePydanticAdapter,
+                DynamicHullTree: DynamicHullTreePydanticAdapter,
+                SubhullNode: SubhullNodePydanticAdapter,
+                SubhullThreadedBinTree: SubhullThreadedBinTreePydanticAdapter,
+                GrahamStepsTableRow: GrahamStepsTableRowPydanticAdapter,
+                GrahamStepsTable: GrahamStepsTablePydanticAdapter,
+                QuickhullNode: QuickhullNodePydanticAdapter
+            }[obj]
+        except KeyError as e:
+            print(f"{e}: unknown PyCGA type")
+
+    if isinstance(obj, PyCGAObject):
+        return pycga_to_pydantic(obj.__class__).from_regular_object(obj)
+
+    if isinstance(obj, dict):
+        return {pycga_to_pydantic(key): pycga_to_pydantic(value) for key, value in obj.items()}
+    
+    if isinstance(obj, Iterable) and not isinstance(obj, str):
+        generator = (pycga_to_pydantic(item) for item in obj)
+        return generator if isinstance(obj, Generator) else obj.__class__(generator)
+    
+    return obj

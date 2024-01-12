@@ -18,3 +18,4 @@ def test_quickhull_node_adapter():
     regular_object = QuickhullNode([Point(1, 1), Point(2, 2)], subhull=[Point(1, 1), Point(2, 2)])
 
     assert adapter.regular_object == regular_object
+    assert QuickhullNodePydanticAdapter.from_regular_object(regular_object) == adapter

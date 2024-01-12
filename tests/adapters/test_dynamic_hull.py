@@ -1,9 +1,8 @@
 from pytest import fixture
 from PyCompGeomAlgorithms.core import Point
 from PyCompGeomAlgorithms.dynamic_hull import DynamicHullNode, DynamicHullTree, SubhullNode, SubhullThreadedBinTree
-from AlgoGrade.adapters import PointPydanticAdapter
+from AlgoGrade.adapters import PointPydanticAdapter, BinTreeNodePydanticAdapter
 from AlgoGrade.dynamic_hull import DynamicHullNodePydanticAdapter, DynamicHullTreePydanticAdapter, SubhullNodePydanticAdapter, SubhullThreadedBinTreePydanticAdapter
-
 
 @fixture
 def dynamic_hull_node_adapter():
@@ -37,6 +36,7 @@ def subhull_node_regular():
 
 def test_dynamic_hull_node_adapter(dynamic_hull_node_adapter, dynamic_hull_node_regular):
     assert dynamic_hull_node_adapter.regular_object == dynamic_hull_node_regular
+    assert DynamicHullNodePydanticAdapter.from_regular_object(dynamic_hull_node_regular) == dynamic_hull_node_adapter
 
 
 def test_dynamic_hull_tree_adapter(dynamic_hull_node_adapter, dynamic_hull_node_regular):
@@ -44,10 +44,12 @@ def test_dynamic_hull_tree_adapter(dynamic_hull_node_adapter, dynamic_hull_node_
     regular_object = DynamicHullTree(dynamic_hull_node_regular)
 
     assert adapter.regular_object == regular_object
+    assert DynamicHullTreePydanticAdapter.from_regular_object(regular_object) == adapter
 
 
 def test_subhull_node_adapter(subhull_node_adapter, subhull_node_regular):
     assert subhull_node_adapter.regular_object == subhull_node_regular
+    assert SubhullNodePydanticAdapter.from_regular_object(subhull_node_regular) == subhull_node_adapter
 
 
 def test_subhull_tree_adapter(subhull_node_adapter, subhull_node_regular):
@@ -55,3 +57,4 @@ def test_subhull_tree_adapter(subhull_node_adapter, subhull_node_regular):
     regular_object = SubhullThreadedBinTree(root=subhull_node_regular)
 
     assert adapter.regular_object == regular_object
+    assert SubhullThreadedBinTreePydanticAdapter.from_regular_object(regular_object) == adapter

@@ -1,6 +1,6 @@
 from typing import ClassVar
 from PyCompGeomAlgorithms.graham import graham, GrahamStepsTableRow, GrahamStepsTable
-from .adapters import PydanticAdapter, PointPydanticAdapter
+from .adapters import pycga_to_pydantic, PydanticAdapter, PointPydanticAdapter
 from .core import Task, Grader, GradeParams, Mistake
 
 
@@ -95,8 +95,24 @@ class GrahamStepsTableRowPydanticAdapter(PydanticAdapter):
     point_triple: tuple[PointPydanticAdapter, PointPydanticAdapter, PointPydanticAdapter]
     is_angle_less_than_pi: bool
 
+    @classmethod
+    def from_regular_object(cls, obj: GrahamStepsTableRow, **kwargs):
+        return cls(
+            point_triple=pycga_to_pydantic(obj.point_triple),
+            is_angle_less_than_pi=obj.is_angle_less_than_pi,
+            **kwargs
+        )
+
 
 class GrahamStepsTablePydanticAdapter(PydanticAdapter):
     regular_class: ClassVar[type] = GrahamStepsTable
     ordered_points: list[PointPydanticAdapter]
     rows: list[GrahamStepsTableRowPydanticAdapter]
+
+    @classmethod
+    def from_regular_object(cls, obj: GrahamStepsTable, **kwargs):
+        return cls(
+            ordered_points=pycga_to_pydantic(obj.ordered_points),
+            rows=pycga_to_pydantic(obj.rows),
+            **kwargs
+        )

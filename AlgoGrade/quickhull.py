@@ -1,6 +1,8 @@
 from functools import partial, cached_property
 from typing import ClassVar, Optional
-from .adapters import PointPydanticAdapter, BinTreeNodePydanticAdapter
+
+from PyCompGeomAlgorithms.core import BinTreeNode
+from .adapters import pycga_to_pydantic, PointPydanticAdapter, BinTreeNodePydanticAdapter
 from .core import Task, Grader, GradeParams, Mistake
 from PyCompGeomAlgorithms.quickhull import quickhull, QuickhullNode
 
@@ -38,3 +40,12 @@ class QuickhullNodePydanticAdapter(BinTreeNodePydanticAdapter):
     regular_class: ClassVar[type] = QuickhullNode
     h: Optional[PointPydanticAdapter] = None
     subhull: list[PointPydanticAdapter]
+
+    @classmethod
+    def from_regular_object(cls, obj: QuickhullNode, **kwargs):
+        return super().from_regular_object(
+            obj,
+            h=pycga_to_pydantic(obj.h),
+            subhull=pycga_to_pydantic(obj.subhull),
+            **kwargs
+        )
