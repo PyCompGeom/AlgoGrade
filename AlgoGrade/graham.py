@@ -10,17 +10,6 @@ class GrahamTask(Task):
 
 
 class GrahamGrader(Grader):
-    scorings = [
-        Scoring(max_grade=0.25, fine=0.25),
-        Scoring(max_grade=0.25, fine=0.25),
-        Scoring(max_grade=0.25, fine=0.25),
-        Scoring(max_grade=0.15, fine=0.15),
-        Scoring(max_grade=0.15, fine=0.15),
-        Scoring(max_grade=0.25, fine=0.25),
-        Scoring(max_grade=0.6, fine=0.3, repeat_fine=0.6),
-        Scoring(max_grade=0.1, fine=0.25)
-    ]
-
     @classmethod
     def grade_methods(cls):
         return [

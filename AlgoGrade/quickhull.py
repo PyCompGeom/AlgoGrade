@@ -13,14 +13,6 @@ class QuickhullTask(Task):
 
 
 class QuickhullGrader(Grader):
-    scorings = [
-        Scoring(max_grade=0.25, fine=0.25),
-        Scoring(max_grade=0.25, fine=0.25, repeat_fine=0.5),
-        Scoring(max_grade=0.25, fine=0.25),
-        Scoring(max_grade=0.25, fine=0.25),
-        Scoring(max_grade=1, fine=1)
-    ]
-
     @classmethod
     def grade_methods(cls):
         return [

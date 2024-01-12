@@ -50,17 +50,15 @@ class Scoring:
 
 
 class Grader:
-    scorings = []
-
     @classmethod
-    def grade(cls, answers, correct_answers, is_pydantic=False):
+    def grade(cls, answers, correct_answers, scorings, is_pydantic=False):
         if is_pydantic:
             answers = pydantic_to_pycga(answers)
 
         mistake_lists = [
             grading_method(answer, correct_answer, scorings)
             for grading_method, answer, correct_answer, scorings
-            in zip(cls.grade_methods(), answers, correct_answers, cls.scorings)
+            in zip(cls.grade_methods(), answers, correct_answers, scorings)
         ]
         mistake_counters = [Counter(mistakes) for mistakes in mistake_lists]
         mistake_fines_dicts = [
@@ -77,7 +75,7 @@ class Grader:
         answer_grades = [
             (answer, max(scorings.min_grade, scorings.max_grade-sum(mistake_fine_dict.values())))
             for answer, scorings, mistake_fine_dict
-            in zip(answers, cls.scorings, mistake_fines_dicts)
+            in zip(answers, scorings, mistake_fines_dicts)
         ]
         total_grade = sum(grade for answer, grade in answer_grades)
         
@@ -144,7 +142,7 @@ class Grader:
 
     @classmethod
     def grade_methods(cls):
-        return [cls.grade_default for _ in cls.scorings]
+        raise NotImplementedError
 
 
 def flatten(iterable):

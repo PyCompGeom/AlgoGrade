@@ -12,17 +12,6 @@ class DynamicHullTask(Task):
 
 
 class DynamicHullGrader(Grader):
-    scorings = [
-        Scoring(max_grade=0.25, fine=0.25),
-        Scoring(max_grade=0.5, fine=0.25, repeat_fine=0.5),
-        Scoring(max_grade=0.25, fine=0.25),
-        Scoring(max_grade=0.5, fine=0.25, repeat_fine=0.5),
-        Scoring(max_grade=0.25, fine=0.25, repeat_fine=0.5),
-        Scoring(max_grade=0.25, fine=0.25),
-        Scoring(max_grade=0.25, fine=0.25),
-        Scoring(max_grade=0.75, fine=0.25, repeat_fine=0.75)
-    ]
-
     @classmethod
     def grade_methods(cls):
         return [

@@ -9,13 +9,6 @@ class PreparataTask(Task):
 
 
 class PreparataGrader(Grader):
-    scorings = [
-        Scoring(max_grade=0.25, fine=0.25),
-        Scoring(max_grade=0.25, fine=0.25, repeat_fine=1.5),
-        Scoring(max_grade=0.25, fine=0.25, repeat_fine=1),
-        Scoring(max_grade=0.25, fine=0.25, repeat_fine=1.5)
-    ]
-
     @classmethod
     def grade_methods(cls):
         return [
