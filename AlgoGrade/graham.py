@@ -10,7 +10,7 @@ class GrahamTask(Task):
 
 
 class GrahamGrader(Grader):
-    grade_params = [
+    scorings = [
         Scoring(max_grade=0.25, fine=0.25),
         Scoring(max_grade=0.25, fine=0.25),
         Scoring(max_grade=0.25, fine=0.25),
@@ -35,9 +35,9 @@ class GrahamGrader(Grader):
         ]
     
     @classmethod
-    def grade_angles_less_than_pi(cls, answer, correct_answer, grade_params):
+    def grade_angles_less_than_pi(cls, answer, correct_answer, scorings):
         return [
-            Mistake(grade_params)
+            Mistake(scorings)
             for row, next_row in zip(answer, answer[1:])
             if row.is_angle_less_than_pi and (
                 row.point_triple[1] != next_row.point_triple[0] or
@@ -47,9 +47,9 @@ class GrahamGrader(Grader):
         ]
     
     @classmethod
-    def grade_angles_greater_than_or_equal_to_pi(cls, answer, correct_answer, grade_params):
+    def grade_angles_greater_than_or_equal_to_pi(cls, answer, correct_answer, scorings):
         return [
-            Mistake(grade_params)
+            Mistake(scorings)
             for row, next_row in zip(answer, answer[1:])
             if not row.is_angle_less_than_pi and (
                 (
@@ -66,9 +66,9 @@ class GrahamGrader(Grader):
         ]
 
     @classmethod
-    def grade_finalization(cls, answer, correct_answer, grade_params):
+    def grade_finalization(cls, answer, correct_answer, scorings):
         return [
-            Mistake(grade_params)
+            Mistake(scorings)
             for row in answer
             if row.point_triple[1] == answer.ordered_points[0]
         ]

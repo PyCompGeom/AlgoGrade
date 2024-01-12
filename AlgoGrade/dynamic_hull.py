@@ -12,7 +12,7 @@ class DynamicHullTask(Task):
 
 
 class DynamicHullGrader(Grader):
-    grade_params = [
+    scorings = [
         Scoring(max_grade=0.25, fine=0.25),
         Scoring(max_grade=0.5, fine=0.25, repeat_fine=0.5),
         Scoring(max_grade=0.25, fine=0.25),
@@ -61,7 +61,7 @@ class DynamicHullGrader(Grader):
         ]
     
     @classmethod
-    def grade_omitted_points(cls, answer, correct_answer, grade_params):
+    def grade_omitted_points(cls, answer, correct_answer, scorings):
         def grade_item_method(a, c, gp):
             if not a.is_leaf:
                 subhull = [node.point for node in a.subhull.traverse_inorder()]
@@ -80,7 +80,7 @@ class DynamicHullGrader(Grader):
 
             return []
         
-        return cls.grade_bin_tree(answer, correct_answer, grade_params, grade_item_method)
+        return cls.grade_bin_tree(answer, correct_answer, scorings, grade_item_method)
 
 
 class DynamicHullNodePydanticAdapter(BinTreeNodePydanticAdapter):

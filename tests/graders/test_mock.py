@@ -3,7 +3,7 @@ from AlgoGrade.adapters import pycga_to_pydantic
 
 
 class MockGrader(Grader):
-    grade_params = [
+    scorings = [
         Scoring(max_grade=10, fine=5),
         Scoring(max_grade=10, fine=5),
         Scoring(min_grade=2, max_grade=10, fine=5, repeat_fine=7)

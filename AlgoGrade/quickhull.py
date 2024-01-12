@@ -13,7 +13,7 @@ class QuickhullTask(Task):
 
 
 class QuickhullGrader(Grader):
-    grade_params = [
+    scorings = [
         Scoring(max_grade=0.25, fine=0.25),
         Scoring(max_grade=0.25, fine=0.25, repeat_fine=0.5),
         Scoring(max_grade=0.25, fine=0.25),
@@ -32,8 +32,8 @@ class QuickhullGrader(Grader):
         ]
     
     @classmethod
-    def grade_finalization(cls, answer, correct_answer, grade_params):
-        return [Mistake(grade_params) for node in answer.traverse_preorder() if not node.is_leaf and len(node.points) == 2]
+    def grade_finalization(cls, answer, correct_answer, scorings):
+        return [Mistake(scorings) for node in answer.traverse_preorder() if not node.is_leaf and len(node.points) == 2]
 
 
 class QuickhullNodePydanticAdapter(BinTreeNodePydanticAdapter):
