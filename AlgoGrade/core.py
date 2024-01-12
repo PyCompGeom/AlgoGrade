@@ -1,6 +1,7 @@
 from math import inf
 from collections import Counter
 from typing import Iterable
+from .adapters import pycga_to_pydantic, pydantic_to_pycga
 
 
 class Task:
@@ -31,7 +32,7 @@ class Mistake:
         return hash((self.__class__, self.grade_params))
 
 
-class GradeParams:
+class Scoring:
     def __init__(self, min_grade=-inf, max_grade=0.0, fine=0.0, repeat_fine=0.0):
         self.min_grade = min_grade
         self.max_grade = max_grade
@@ -52,7 +53,10 @@ class Grader:
     grade_params = []
 
     @classmethod
-    def grade(cls, answers, correct_answers):
+    def grade(cls, answers, correct_answers, is_pydantic=False):
+        if is_pydantic:
+            answers = pydantic_to_pycga(answers)
+
         mistake_lists = [
             grading_method(answer, correct_answer, grade_params)
             for grading_method, answer, correct_answer, grade_params
@@ -66,6 +70,9 @@ class Grader:
             }
             for mistake_counter in mistake_counters
         ]
+
+        if is_pydantic:
+            answers = pycga_to_pydantic(answers)
 
         answer_grades = [
             (answer, max(grade_params.min_grade, grade_params.max_grade-sum(mistake_fine_dict.values())))

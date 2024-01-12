@@ -3,6 +3,7 @@ from math import isclose
 from PyCompGeomAlgorithms.core import Point
 from PyCompGeomAlgorithms.graham import GrahamStepsTable, GrahamStepsTableRow
 from AlgoGrade.graham import GrahamGrader, GrahamTask
+from AlgoGrade.adapters import pycga_to_pydantic
 
 
 points = [
@@ -68,6 +69,9 @@ def test_graham_grader_all_correct():
     total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 2)
 
+    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 2)
+
 
 def test_graham_grader_incorrect_centroid():
     correct_answers = task.correct_answers
@@ -75,6 +79,9 @@ def test_graham_grader_incorrect_centroid():
     answers[0] = Point(100, 100)
 
     total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 1.75)
+
+    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 1.75)
 
 
@@ -97,6 +104,9 @@ def test_graham_grader_incorrect_ordered_points():
     total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 1.75)
 
+    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 1.75)
+
 
 def test_graham_grader_incorrect_origin():
     correct_answers = task.correct_answers
@@ -104,6 +114,9 @@ def test_graham_grader_incorrect_origin():
     answers[2] = Point(100, 100)
 
     total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 1.75)
+
+    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 1.75)
 
 
@@ -129,6 +142,9 @@ def test_graham_grader_incorrect_triples():
     total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 1.85)
 
+    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 1.85)
+
 
 def test_graham_grader_incorrect_are_angles_less_than_pi():
     correct_answers = task.correct_answers
@@ -136,6 +152,9 @@ def test_graham_grader_incorrect_are_angles_less_than_pi():
     answers[4] = [False for _ in answers[4]]
 
     total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 1.85)
+
+    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 1.85)
 
 
@@ -151,6 +170,9 @@ def test_graham_grader_incorrect_rows_with_angles_less_than_pi():
     total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 1.75)
 
+    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 1.75)
+
 
 def test_graham_grader_incorrect_rows_with_angles_not_less_than_pi_single():
     correct_answers = task.correct_answers
@@ -162,6 +184,9 @@ def test_graham_grader_incorrect_rows_with_angles_not_less_than_pi_single():
     
     total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 1.45) # also triggers "rows with angles < pi" grading
+
+    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 1.45)
 
 
 def test_graham_grader_incorrect_rows_with_angles_not_less_than_pi_repeated():
@@ -175,6 +200,9 @@ def test_graham_grader_incorrect_rows_with_angles_not_less_than_pi_repeated():
     total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 1.15) # also triggers "rows with angles < pi" grading
 
+    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 1.15)
+
 
 def test_graham_grader_incorrect_finalization():
     correct_answers = task.correct_answers
@@ -184,3 +212,6 @@ def test_graham_grader_incorrect_finalization():
 
     total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 1.5) # also triggers "rows with angles <pi" grading
+
+    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 1.5)

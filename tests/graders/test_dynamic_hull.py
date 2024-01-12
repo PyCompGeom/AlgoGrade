@@ -3,6 +3,7 @@ from copy import deepcopy
 from PyCompGeomAlgorithms.core import Point
 from PyCompGeomAlgorithms.dynamic_hull import DynamicHullNode, DynamicHullTree, SubhullThreadedBinTree, PathDirection
 from AlgoGrade.dynamic_hull import DynamicHullTask, DynamicHullGrader
+from AlgoGrade.adapters import pycga_to_pydantic
 
 
 points = p2, p1, p3 = [Point(3, 3), Point(1, 1), Point(5, 0)]
@@ -54,6 +55,9 @@ def test_dynamic_hull_grader_all_correct():
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 3)
 
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 3)
+
 
 def test_dynamic_hull_grader_incorrect_leaves():
     correct_answers = task.correct_answers
@@ -65,6 +69,9 @@ def test_dynamic_hull_grader_incorrect_leaves():
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 2.75)
 
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 2.75)
+
 
 def test_dynamic_hull_grader_incorrect_left_supporting_single():
     correct_answers = task.correct_answers
@@ -74,6 +81,9 @@ def test_dynamic_hull_grader_incorrect_left_supporting_single():
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 2.5)
 
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 2.5)
+
 
 def test_dynamic_hull_grader_incorrect_right_supporting_single():
     correct_answers = task.correct_answers
@@ -81,6 +91,9 @@ def test_dynamic_hull_grader_incorrect_right_supporting_single():
     answers[1].root.right_supporting = Point(100, 100) # also triggers "omitted points" grading
 
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 2.5)
+
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 2.5)
 
 
@@ -93,6 +106,9 @@ def test_dynamic_hull_grader_incorrect_left_and_right_supporting():
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 2.25)
 
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 2.25)
+
 
 def test_dynamic_hull_grader_incorrect_left_supporting_repeated():
     correct_answers = task.correct_answers
@@ -103,6 +119,9 @@ def test_dynamic_hull_grader_incorrect_left_supporting_repeated():
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 2.25)
 
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 2.25)
+
 
 def test_dynamic_hull_grader_incorrect_right_supporting_repeated():
     correct_answers = task.correct_answers
@@ -111,6 +130,9 @@ def test_dynamic_hull_grader_incorrect_right_supporting_repeated():
     answers[1].root.left.right_supporting = Point(100, 100)
 
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 2.25)
+
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 2.25)
 
 
@@ -131,6 +153,9 @@ def test_dynamic_hull_grader_incorrect_omitted_points():
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 2.75)
 
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 2.75)
+
 
 def test_dynamic_hull_grader_incorrect_subhull_single():
     correct_answers = task.correct_answers
@@ -140,6 +165,9 @@ def test_dynamic_hull_grader_incorrect_subhull_single():
     answers[3].root.subhull.root.point = Point(100, 100)
 
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 2.75)
+
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 2.75)
 
 
@@ -157,6 +185,9 @@ def test_dynamic_hull_grader_incorrect_subhull_repeated():
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 2.5)
 
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 2.5)
+
 
 def test_dynamic_hull_grader_incorrect_point_single():
     correct_answers = task.correct_answers
@@ -164,6 +195,9 @@ def test_dynamic_hull_grader_incorrect_point_single():
     answers[4].root.point = Point(100, 100)
 
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 2.75)
+
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 2.75)
 
 
@@ -176,6 +210,9 @@ def test_dynamic_hull_grader_incorrect_point_repeated():
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 2.5)
 
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 2.5)
+
 
 def test_dynamic_hull_grader_optimization():
     correct_answers = task.correct_answers
@@ -183,6 +220,9 @@ def test_dynamic_hull_grader_optimization():
     answers[5].root.optimized_subhull.root.point = Point(100, 100)
 
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 2.75)
+
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 2.75)
 
 
@@ -194,6 +234,9 @@ def test_dynamic_hull_grader_search_path():
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 2.75)
 
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 2.75)
+
 
 def test_dynamic_hull_grader_incorrect_final_tree_single():
     correct_answers = task.correct_answers
@@ -203,6 +246,9 @@ def test_dynamic_hull_grader_incorrect_final_tree_single():
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 2.75)
 
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 2.75)
+
 
 def test_dynamic_hull_grader_incorrect_final_hull_single():
     correct_answers = task.correct_answers
@@ -210,6 +256,9 @@ def test_dynamic_hull_grader_incorrect_final_hull_single():
     answers[7][1][0] = Point(100, 100)
 
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 2.75)
+
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 2.75)
 
 
@@ -222,6 +271,9 @@ def test_dynamic_hull_grader_incorrect_final_tree_repeated():
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 2.25)
 
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 2.25)
+
 
 def test_dynamic_hull_grader_incorrect_final_hull_repeated():
     correct_answers = task.correct_answers
@@ -232,6 +284,9 @@ def test_dynamic_hull_grader_incorrect_final_hull_repeated():
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 2.25)
 
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 2.25)
+
 
 def test_dynamic_hull_grader_incorrect_final_tree_and_hull():
     correct_answers = task.correct_answers
@@ -240,4 +295,7 @@ def test_dynamic_hull_grader_incorrect_final_tree_and_hull():
     answers[7][1][0] = Point(100, 100)
 
     total_grade, answer_grades = DynamicHullGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 2.25)
+
+    total_grade, answer_grades = DynamicHullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 2.25)

@@ -1,7 +1,7 @@
 from typing import ClassVar
 from PyCompGeomAlgorithms.graham import graham, GrahamStepsTableRow, GrahamStepsTable
 from .adapters import pycga_to_pydantic, PydanticAdapter, PointPydanticAdapter
-from .core import Task, Grader, GradeParams, Mistake
+from .core import Task, Grader, Scoring, Mistake
 
 
 class GrahamTask(Task):
@@ -11,14 +11,14 @@ class GrahamTask(Task):
 
 class GrahamGrader(Grader):
     grade_params = [
-        GradeParams(max_grade=0.25, fine=0.25),
-        GradeParams(max_grade=0.25, fine=0.25),
-        GradeParams(max_grade=0.25, fine=0.25),
-        GradeParams(max_grade=0.15, fine=0.15),
-        GradeParams(max_grade=0.15, fine=0.15),
-        GradeParams(max_grade=0.25, fine=0.25),
-        GradeParams(max_grade=0.6, fine=0.3, repeat_fine=0.6),
-        GradeParams(max_grade=0.1, fine=0.25)
+        Scoring(max_grade=0.25, fine=0.25),
+        Scoring(max_grade=0.25, fine=0.25),
+        Scoring(max_grade=0.25, fine=0.25),
+        Scoring(max_grade=0.15, fine=0.15),
+        Scoring(max_grade=0.15, fine=0.15),
+        Scoring(max_grade=0.25, fine=0.25),
+        Scoring(max_grade=0.6, fine=0.3, repeat_fine=0.6),
+        Scoring(max_grade=0.1, fine=0.25)
     ]
 
     @classmethod

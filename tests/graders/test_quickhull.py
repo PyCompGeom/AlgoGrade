@@ -3,6 +3,7 @@ from copy import deepcopy
 from PyCompGeomAlgorithms.core import Point, BinTree
 from PyCompGeomAlgorithms.quickhull import QuickhullNode
 from AlgoGrade.quickhull import QuickhullGrader, QuickhullTask
+from AlgoGrade.adapters import pycga_to_pydantic
 
 
 points = [
@@ -78,6 +79,9 @@ def test_quickhull_grader_all_correct():
     total_grade, answer_grades = QuickhullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 2)
 
+    total_grade, answer_grades = QuickhullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 2)
+
 
 def test_quickhull_grader_incorrect_first_step():
     correct_answers = task.correct_answers
@@ -89,6 +93,9 @@ def test_quickhull_grader_incorrect_first_step():
     total_grade, answer_grades = QuickhullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 1.75)
 
+    total_grade, answer_grades = QuickhullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 1.75)
+
 
 def test_quickhull_grader_incorrect_h_single():
     correct_answers = task.correct_answers
@@ -96,6 +103,9 @@ def test_quickhull_grader_incorrect_h_single():
     answers[1].root.h = Point(100, 100)
 
     total_grade, answer_grades = QuickhullGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 1.75)
+
+    total_grade, answer_grades = QuickhullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 1.75)
 
 
@@ -108,6 +118,9 @@ def test_quickhull_grader_incorrect_h_repeated():
     total_grade, answer_grades = QuickhullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 1.5)
 
+    total_grade, answer_grades = QuickhullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 1.5)
+
 
 def test_quickhull_grader_incorrect_points():
     correct_answers = task.correct_answers
@@ -115,6 +128,9 @@ def test_quickhull_grader_incorrect_points():
     answers[2].root.left.left.points[0] = Point(100, 100)
 
     total_grade, answer_grades = QuickhullGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 1.75)
+
+    total_grade, answer_grades = QuickhullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 1.75)
 
 
@@ -126,6 +142,9 @@ def test_quickhull_grader_incorrect_finalization():
     total_grade, answer_grades = QuickhullGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 1.75)
 
+    total_grade, answer_grades = QuickhullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 1.75)
+
 
 def test_quickhull_grader_incorrect_merge():
     correct_answers = task.correct_answers
@@ -133,4 +152,7 @@ def test_quickhull_grader_incorrect_merge():
     answers[4].root.left.right.subhull = [Point(100, 100)]
 
     total_grade, answer_grades = QuickhullGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 1)
+
+    total_grade, answer_grades = QuickhullGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 1)

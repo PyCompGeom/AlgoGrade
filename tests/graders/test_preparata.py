@@ -2,6 +2,8 @@ from math import isclose
 from copy import deepcopy
 from PyCompGeomAlgorithms.core import Point, ThreadedBinTree
 from AlgoGrade.preparata import PreparataGrader, PreparataTask
+from AlgoGrade.adapters import pycga_to_pydantic
+
 
 points = [Point(1, 1), Point(1, 5), Point(5, 3), Point(1, 11), Point(6, 1), Point(10, 1)]
 task = PreparataTask(points)
@@ -35,6 +37,9 @@ def test_preparata_all_correct():
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 1)
 
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 1)
+
 
 def test_preparata_grader_incorrect_first_hull():
     correct_answers = task.correct_answers
@@ -44,6 +49,9 @@ def test_preparata_grader_incorrect_first_hull():
     first_hull[0] = Point(100, 100)
 
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 0.75)
+
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 0.75)
 
 
@@ -57,6 +65,9 @@ def test_preparata_grader_incorrect_first_tree():
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 0.75)
 
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 0.75)
+
 
 def test_preparata_grader_incorrect_left_paths_single():
     correct_answers = task.correct_answers
@@ -66,6 +77,9 @@ def test_preparata_grader_incorrect_left_paths_single():
     left_paths[0][0] = Point(100, 100)
 
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 0.75)
+
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 0.75)
 
 
@@ -80,6 +94,9 @@ def test_preparata_grader_incorrect_left_paths_repeated():
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
     assert isclose(total_grade, -0.5)
 
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, -0.5)
+
 
 def test_preparata_grader_incorrect_right_paths_single():
     correct_answers = task.correct_answers
@@ -89,6 +106,9 @@ def test_preparata_grader_incorrect_right_paths_single():
     right_paths[0][0] = Point(100, 100)
 
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 0.75)
+
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 0.75)
 
 
@@ -101,6 +121,9 @@ def test_preparata_grader_incorrect_right_paths_repeated():
     right_paths[0][1] = Point(100, 100)
 
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, -0.5)
 
 
@@ -116,6 +139,9 @@ def test_preparata_grader_incorrect_left_and_right_paths():
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
     assert isclose(total_grade, -0.5)
 
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, -0.5)
+
 
 def test_preparata_grader_incorrect_deleted_points_single():
     correct_answers = task.correct_answers
@@ -125,6 +151,9 @@ def test_preparata_grader_incorrect_deleted_points_single():
     deleted_points[0][0] = Point(100, 100)
 
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 0.75)
+
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 0.75)
 
 
@@ -139,6 +168,9 @@ def test_preparata_grader_incorrect_deleted_points_repeated():
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
     assert isclose(total_grade, 0)
 
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, 0)
+
 
 def test_preparata_grader_incorrect_hulls_single():
     correct_answers = task.correct_answers
@@ -148,6 +180,9 @@ def test_preparata_grader_incorrect_hulls_single():
     hulls[0][0] = Point(100, 100)
 
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 0.75)
+
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 0.75)
 
 
@@ -162,6 +197,9 @@ def test_preparata_grader_incorrect_hulls_repeated():
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
     assert isclose(total_grade, -0.5)
 
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
+    assert isclose(total_grade, -0.5)
+
 
 def test_preparata_grader_incorrect_trees_single():
     correct_answers = task.correct_answers
@@ -171,6 +209,9 @@ def test_preparata_grader_incorrect_trees_single():
     trees[0].root.data = Point(100, 100)
 
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, 0.75)
+
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, 0.75)
 
 
@@ -184,6 +225,9 @@ def test_preparata_grader_incorrect_trees_repeated():
     trees[1].root.data = Point(100, 100)
 
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, -0.5)
 
 
@@ -201,4 +245,7 @@ def test_preparata_grader_incorrect_trees_and_hulls():
     trees[1].root.data = Point(100, 100)
 
     total_grade, answer_grades = PreparataGrader.grade(answers, correct_answers)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade(pycga_to_pydantic(answers), correct_answers, is_pydantic=True)
     assert isclose(total_grade, -0.5)

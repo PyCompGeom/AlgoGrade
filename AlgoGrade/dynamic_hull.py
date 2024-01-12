@@ -1,9 +1,9 @@
-from functools import partial
+from functools import partial, cached_property
 from typing import ClassVar, Optional
 from PyCompGeomAlgorithms.core import BinTree, BinTreeNode, ThreadedBinTree, ThreadedBinTreeNode
 from PyCompGeomAlgorithms.dynamic_hull import upper_dynamic_hull, DynamicHullNode, DynamicHullTree, SubhullNode, SubhullThreadedBinTree
-from .adapters import pycga_to_pydantic, PointPydanticAdapter, BinTreeNodePydanticAdapter, BinTreePydanticAdapter, ThreadedBinTreeNodePydanticAdapter, ThreadedBinTreePydanticAdapter
-from .core import Task, Grader, GradeParams, Mistake
+from .adapters import pycga_to_pydantic, pydantic_to_pycga, PointPydanticAdapter, BinTreeNodePydanticAdapter, BinTreePydanticAdapter, ThreadedBinTreeNodePydanticAdapter, ThreadedBinTreePydanticAdapter
+from .core import Task, Grader, Scoring, Mistake
 
 
 class DynamicHullTask(Task):
@@ -13,14 +13,14 @@ class DynamicHullTask(Task):
 
 class DynamicHullGrader(Grader):
     grade_params = [
-        GradeParams(max_grade=0.25, fine=0.25),
-        GradeParams(max_grade=0.5, fine=0.25, repeat_fine=0.5),
-        GradeParams(max_grade=0.25, fine=0.25),
-        GradeParams(max_grade=0.5, fine=0.25, repeat_fine=0.5),
-        GradeParams(max_grade=0.25, fine=0.25, repeat_fine=0.5),
-        GradeParams(max_grade=0.25, fine=0.25),
-        GradeParams(max_grade=0.25, fine=0.25),
-        GradeParams(max_grade=0.75, fine=0.25, repeat_fine=0.75)
+        Scoring(max_grade=0.25, fine=0.25),
+        Scoring(max_grade=0.5, fine=0.25, repeat_fine=0.5),
+        Scoring(max_grade=0.25, fine=0.25),
+        Scoring(max_grade=0.5, fine=0.25, repeat_fine=0.5),
+        Scoring(max_grade=0.25, fine=0.25, repeat_fine=0.5),
+        Scoring(max_grade=0.25, fine=0.25),
+        Scoring(max_grade=0.25, fine=0.25),
+        Scoring(max_grade=0.75, fine=0.25, repeat_fine=0.75)
     ]
 
     @classmethod
@@ -95,8 +95,8 @@ class DynamicHullNodePydanticAdapter(BinTreeNodePydanticAdapter):
     def from_regular_object(cls, obj: DynamicHullNode, **kwargs):
         return super().from_regular_object(
             obj,
-            subhull_points=pycga_to_pydantic(node.point for node in obj.subhull.traverse_inorder()),
-            optimized_subhull_points=pycga_to_pydantic(node.point for node in obj.optimized_subhull.traverse_inorder()),
+            subhull_points=pycga_to_pydantic([node.point for node in obj.subhull.traverse_inorder()]),
+            optimized_subhull_points=pycga_to_pydantic([node.point for node in obj.optimized_subhull.traverse_inorder()]),
             left_supporting_index=obj.left_supporting_index,
             left_supporting=pycga_to_pydantic(obj.left_supporting),
             right_supporting=pycga_to_pydantic(obj.right_supporting),

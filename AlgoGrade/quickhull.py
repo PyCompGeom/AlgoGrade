@@ -3,7 +3,7 @@ from typing import ClassVar, Optional
 
 from PyCompGeomAlgorithms.core import BinTreeNode
 from .adapters import pycga_to_pydantic, PointPydanticAdapter, BinTreeNodePydanticAdapter
-from .core import Task, Grader, GradeParams, Mistake
+from .core import Task, Grader, Scoring, Mistake
 from PyCompGeomAlgorithms.quickhull import quickhull, QuickhullNode
 
 
@@ -14,11 +14,11 @@ class QuickhullTask(Task):
 
 class QuickhullGrader(Grader):
     grade_params = [
-        GradeParams(max_grade=0.25, fine=0.25),
-        GradeParams(max_grade=0.25, fine=0.25, repeat_fine=0.5),
-        GradeParams(max_grade=0.25, fine=0.25),
-        GradeParams(max_grade=0.25, fine=0.25),
-        GradeParams(max_grade=1, fine=1)
+        Scoring(max_grade=0.25, fine=0.25),
+        Scoring(max_grade=0.25, fine=0.25, repeat_fine=0.5),
+        Scoring(max_grade=0.25, fine=0.25),
+        Scoring(max_grade=0.25, fine=0.25),
+        Scoring(max_grade=1, fine=1)
     ]
 
     @classmethod
@@ -39,7 +39,7 @@ class QuickhullGrader(Grader):
 class QuickhullNodePydanticAdapter(BinTreeNodePydanticAdapter):
     regular_class: ClassVar[type] = QuickhullNode
     h: Optional[PointPydanticAdapter] = None
-    subhull: list[PointPydanticAdapter]
+    subhull: Optional[list[PointPydanticAdapter]] = None
 
     @classmethod
     def from_regular_object(cls, obj: QuickhullNode, **kwargs):

@@ -1,5 +1,5 @@
 from functools import partial
-from .core import Task, Grader, GradeParams
+from .core import Task, Grader, Scoring
 from PyCompGeomAlgorithms.preparata import preparata
 
 
@@ -10,10 +10,10 @@ class PreparataTask(Task):
 
 class PreparataGrader(Grader):
     grade_params = [
-        GradeParams(max_grade=0.25, fine=0.25),
-        GradeParams(max_grade=0.25, fine=0.25, repeat_fine=1.5),
-        GradeParams(max_grade=0.25, fine=0.25, repeat_fine=1),
-        GradeParams(max_grade=0.25, fine=0.25, repeat_fine=1.5)
+        Scoring(max_grade=0.25, fine=0.25),
+        Scoring(max_grade=0.25, fine=0.25, repeat_fine=1.5),
+        Scoring(max_grade=0.25, fine=0.25, repeat_fine=1),
+        Scoring(max_grade=0.25, fine=0.25, repeat_fine=1.5)
     ]
 
     @classmethod

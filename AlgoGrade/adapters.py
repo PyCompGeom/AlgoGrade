@@ -1,5 +1,6 @@
 from functools import cached_property
 from typing import Any, ClassVar, Optional, Iterable, Generator
+from enum import Enum
 from pydantic import BaseModel
 from PyCompGeomAlgorithms.core import PyCGAObject, Point, BinTreeNode, BinTree, ThreadedBinTreeNode, ThreadedBinTree
 from PyCompGeomAlgorithms.dynamic_hull import DynamicHullNode, DynamicHullTree, SubhullNode, SubhullThreadedBinTree
@@ -67,6 +68,22 @@ class BinTreeNodePydanticAdapter(PydanticAdapter):
             right=pycga_to_pydantic(obj.right),
             **kwargs
         )
+    
+    def traverse_inorder(self, node=None, nodes=None):
+        if node is None:
+            node = self
+        if nodes is None:
+            nodes = []
+        
+        if node.left:
+            self.traverse_inorder(node.left, nodes)
+        
+        nodes.append(node)
+
+        if node.right:
+            self.traverse_inorder(node.right, nodes)
+        
+        return nodes
 
 
 class BinTreePydanticAdapter(PydanticAdapter):
@@ -76,6 +93,9 @@ class BinTreePydanticAdapter(PydanticAdapter):
     @classmethod
     def from_regular_object(cls, obj: BinTree, **kwargs):
         return cls(root=pycga_to_pydantic(obj.root), **kwargs)
+    
+    def traverse_inorder(self):
+        return self.root.traverse_inorder() if self.root else []
 
 
 class ThreadedBinTreeNodePydanticAdapter(BinTreeNodePydanticAdapter):
@@ -93,12 +113,7 @@ class ThreadedBinTreeNodePydanticAdapter(BinTreeNodePydanticAdapter):
     
     @classmethod
     def from_regular_object(cls, obj: ThreadedBinTreeNode, **kwargs):
-        return super().from_regular_object(
-            obj,
-            prev=pycga_to_pydantic(obj.prev),
-            next=pycga_to_pydantic(obj.next),
-            **kwargs
-        )
+        return super().from_regular_object(obj, prev=None, next=None, **kwargs)
         
 
 class ThreadedBinTreePydanticAdapter(BinTreePydanticAdapter):
@@ -107,7 +122,20 @@ class ThreadedBinTreePydanticAdapter(BinTreePydanticAdapter):
 
     @classmethod
     def from_regular_object(cls, obj: ThreadedBinTree, **kwargs):
-        return super().from_regular_object(obj, **kwargs)
+        root = obj.root
+        is_circular = root.leftmost_node.prev is root.rightmost_node or root.rightmost_node.next is root.leftmost_node
+        root = pycga_to_pydantic(obj.root)
+        nodes = root.traverse_inorder()
+
+        for i, node in enumerate(nodes):
+            node.prev = node.left if node.left else nodes[i-1]
+            node.next = node.right if node.right else nodes[(i+1)%len(nodes)]
+        
+        if not is_circular and nodes:
+            nodes[0].prev = None
+            nodes[-1].next = None
+        
+        return cls(root=root, **kwargs)
 
     @cached_property
     def regular_object(self):
@@ -157,9 +185,9 @@ def pycga_to_pydantic(obj: Any | type | PyCGAObject | Iterable):
                 QuickhullNode: QuickhullNodePydanticAdapter
             }[obj]
         except KeyError as e:
-            print(f"{e}: unknown PyCGA type")
+            raise KeyError("unknown PyCGA type") from e
 
-    if isinstance(obj, PyCGAObject):
+    if isinstance(obj, PyCGAObject) and not isinstance(obj, Enum):
         return pycga_to_pydantic(obj.__class__).from_regular_object(obj)
 
     if isinstance(obj, dict):
