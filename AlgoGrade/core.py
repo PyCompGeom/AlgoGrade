@@ -139,10 +139,10 @@ class Grader:
 
 
 class GivenJSONParser:
-    """Parses a JSON-represented givens as a tuple of arguments to be fed into the respective PyCGA task solving method."""
+    """Parses a JSON-represented (list) givens as a tuple of arguments to be fed into the respective PyCGA task solving method."""
     @classmethod
     def parse(cls, data) -> list[Any]:
-        """Parses a JSON-represented givens as a tuple of arguments to be fed into the respective PyCGA task solving method."""
+        """Parses a JSON-represented (list) givens as a tuple of arguments to be fed into the respective PyCGA task solving method."""
         raise NotImplementedError
 
 
