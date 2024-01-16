@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="AlgoGrade",
-    version="1.0.5",
+    version="1.0.6",
     author="artandfi (Artem Fisunenko)",
     author_email="artyom.fisunenko@gmail.com",
     description="A library for automated grading of algorithmic tasks with grading of their intermediate stages. "

@@ -155,8 +155,8 @@ class Task:
     @classmethod
     def solve(cls, givens: str):
         givens = cls.given_parser_class.parse(givens)
-        answers = list(cls.algorithm(*givens))
-        return cls.answers_class.from_iterable(answers)
+        pycga_answers = list(cls.algorithm(*givens))
+        return cls.answers_class.from_iterable(pycga_to_pydantic(pycga_answers))
 
 
 def flatten(iterable):
