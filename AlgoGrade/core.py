@@ -1,16 +1,20 @@
 from math import inf
 from collections import Counter
-from typing import Iterable
+from typing import Iterable, Callable, Type, Any
+from pydantic import BaseModel
 from .adapters import pycga_to_pydantic, pydantic_to_pycga
 
 
-class Task:
-    description = ""
-    algorithm = None
-
-    def __init__(self, *inputs):
-        self.inputs = inputs
-        self.correct_answers = list(self.__class__.algorithm(*inputs))
+class Answers(BaseModel):
+    @classmethod
+    def from_iterable(cls, iterable):
+        raise NotImplementedError
+    
+    def to_pydantic_list(self):
+        raise NotImplementedError
+    
+    def to_pycga_list(self):
+        return pydantic_to_pycga(self.to_pydantic_list())
 
 
 class Mistake:
@@ -143,6 +147,27 @@ class Grader:
     @classmethod
     def grade_methods(cls):
         raise NotImplementedError
+
+
+class GivenJSONParser:
+    """Parses a JSON-represented givens as a tuple of arguments to be fed into the respective PyCGA task solving method."""
+    @classmethod
+    def parse(cls, data) -> list[Any]:
+        """Parses a JSON-represented givens as a tuple of arguments to be fed into the respective PyCGA task solving method."""
+        raise NotImplementedError
+
+
+class Task:
+    algorithm: Callable = None
+    grader_class: Type[Grader] = None
+    answers_class: Type[Answers] = None
+    given_parser_class: Type[GivenJSONParser] = None
+
+    @classmethod
+    def solve(cls, givens: str):
+        givens = cls.given_parser_class.parse(givens)
+        answers = list(cls.algorithm(*givens))
+        return cls.answers_class.from_iterable(answers)
 
 
 def flatten(iterable):

@@ -1,12 +1,8 @@
 from typing import ClassVar
 from PyCompGeomAlgorithms.graham import graham, GrahamStepsTableRow, GrahamStepsTable
-from .adapters import pycga_to_pydantic, PydanticAdapter, PointPydanticAdapter
-from .core import Task, Grader, Scoring, Mistake
-
-
-class GrahamTask(Task):
-    description = "Construct the convex hull of points using Graham's scan."
-    algorithm = graham
+from .adapters import pycga_to_pydantic, pydantic_to_pycga, PydanticAdapter, PointPydanticAdapter
+from .core import Task, Grader, Mistake, Answers
+from .parsers import PointListGivenJSONParser
 
 
 class GrahamGrader(Grader):
@@ -105,3 +101,33 @@ class GrahamStepsTablePydanticAdapter(PydanticAdapter):
             rows=pycga_to_pydantic(obj.rows),
             **kwargs
         )
+
+
+class GrahamAnswers(Answers):
+    centroid: PointPydanticAdapter
+    ordered_points: list[PointPydanticAdapter]
+    origin: PointPydanticAdapter
+    point_triples: list[tuple[PointPydanticAdapter, PointPydanticAdapter, PointPydanticAdapter]]
+    are_angles_less_than_pi: list[bool]
+    steps_table: GrahamStepsTablePydanticAdapter
+
+    @classmethod
+    def from_iterable(cls, iterable):
+        centroid, ordered_points, origin, point_triples, are_angles_less_than_pi, steps_table, *rest = iterable
+        return cls(
+            centroid=centroid, ordered_points=ordered_points, origin=origin, point_triples=point_triples,
+            are_angles_less_than_pi=are_angles_less_than_pi, steps_table=steps_table
+        )
+    
+    def to_pydantic_list(self):
+        return [
+            self.centroid, self.ordered_points, self.origin, self.point_triples,
+            self.are_angles_less_than_pi, self.steps_table, self.steps_table, self.steps_table
+        ]
+
+
+class GrahamTask(Task):
+    algorithm = graham
+    grader_class = GrahamGrader
+    answers_class = GrahamAnswers
+    given_parser_class = PointListGivenJSONParser

@@ -1,14 +1,10 @@
 from functools import partial, cached_property
 from typing import ClassVar, Optional
 from PyCompGeomAlgorithms.core import BinTree, BinTreeNode, ThreadedBinTree, ThreadedBinTreeNode
-from PyCompGeomAlgorithms.dynamic_hull import upper_dynamic_hull, DynamicHullNode, DynamicHullTree, SubhullNode, SubhullThreadedBinTree
+from PyCompGeomAlgorithms.dynamic_hull import upper_dynamic_hull, DynamicHullNode, DynamicHullTree, SubhullNode, SubhullThreadedBinTree, PathDirection
 from .adapters import pycga_to_pydantic, pydantic_to_pycga, PointPydanticAdapter, BinTreeNodePydanticAdapter, BinTreePydanticAdapter, ThreadedBinTreeNodePydanticAdapter, ThreadedBinTreePydanticAdapter
-from .core import Task, Grader, Scoring, Mistake
-
-
-class DynamicHullTask(Task):
-    description = "Construct the upper convex hull of points using Preparata's algorithm. Modify it by adding or deleting a specified point."
-    algorithm = upper_dynamic_hull
+from .core import Task, Grader, Answers, Mistake
+from .parsers import PointListAndTargetPointGivenJSONParser
 
 
 class DynamicHullGrader(Grader):
@@ -117,3 +113,33 @@ class SubhullThreadedBinTreePydanticAdapter(ThreadedBinTreePydanticAdapter):
     @classmethod
     def from_regular_object(cls, obj: SubhullThreadedBinTree, **kwargs):
         return super().from_regular_object(obj, **kwargs)
+
+
+class DynamicHullAnswers(Answers):
+    leaves: list[DynamicHullNodePydanticAdapter]
+    tree: DynamicHullTreePydanticAdapter
+    optimized_tree: DynamicHullTreePydanticAdapter
+    path: list[PathDirection]
+    modified_tree: DynamicHullTreePydanticAdapter
+    hull: list[PointPydanticAdapter]
+
+    @classmethod
+    def from_iterable(cls, iterable):
+        leaves, tree, optimized_tree, path, modified_tree, hull, *rest = iterable
+        return cls(
+            leaves=leaves, tree=tree, optimized_tree=optimized_tree,
+            path=path, modified_tree=modified_tree, hull=hull
+        )
+    
+    def to_pydantic_list(self):
+        return [
+            self.leaves, self.tree, self.tree, self.tree, self.tree,
+            self.optimized_tree, self.path, (self.modified_tree, self.hull)
+        ]
+
+
+class DynamicHullTask(Task):
+    algorithm = upper_dynamic_hull
+    grader_class = DynamicHullGrader
+    answers_class = DynamicHullAnswers
+    given_parser_class = PointListAndTargetPointGivenJSONParser

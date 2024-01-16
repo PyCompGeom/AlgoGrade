@@ -1,15 +1,10 @@
-from functools import partial, cached_property
+from functools import partial
 from typing import ClassVar, Optional
-
-from PyCompGeomAlgorithms.core import BinTreeNode
-from .adapters import pycga_to_pydantic, PointPydanticAdapter, BinTreeNodePydanticAdapter
-from .core import Task, Grader, Scoring, Mistake
+from PyCompGeomAlgorithms.core import BinTree
 from PyCompGeomAlgorithms.quickhull import quickhull, QuickhullNode
-
-
-class QuickhullTask(Task):
-    description = "Construct the convex hull of points using Quickhull algorithm."
-    algorithm = quickhull
+from .adapters import pycga_to_pydantic, PointPydanticAdapter, BinTreeNodePydanticAdapter, BinTreePydanticAdapter
+from .core import Task, Grader, Mistake, Answers
+from .parsers import PointListGivenJSONParser
 
 
 class QuickhullGrader(Grader):
@@ -41,3 +36,37 @@ class QuickhullNodePydanticAdapter(BinTreeNodePydanticAdapter):
             subhull=pycga_to_pydantic(obj.subhull),
             **kwargs
         )
+
+
+class QuickhullTreePydanticAdapter(BinTreePydanticAdapter):
+    regular_class: ClassVar[type] = BinTree
+    root: QuickhullNodePydanticAdapter
+
+
+class QuickhullAnswers(Answers):
+    leftmost_point: PointPydanticAdapter
+    rightmost_point: PointPydanticAdapter
+    subset1: list[PointPydanticAdapter]
+    subset2: list[PointPydanticAdapter]
+    tree: QuickhullTreePydanticAdapter
+
+    @classmethod
+    def from_iterable(cls, iterable):
+        leftmost_point, rightmost_point, subset1, subset2, tree, *rest = iterable
+        return cls(
+            leftmost_point=leftmost_point, rightmost_point=rightmost_point,
+            subset1=subset1, subset2=subset2, tree=tree
+        )
+    
+    def to_pydantic_list(self):
+        return [
+            (self.leftmost_point, self.rightmost_point, self.subset1, self.subset2),
+            self.tree, self.tree, self.tree, self.tree
+        ]
+
+
+class QuickhullTask(Task):
+    algorithm = quickhull
+    grader_class = QuickhullGrader
+    answers_class = QuickhullAnswers
+    given_parser_class = PointListGivenJSONParser
