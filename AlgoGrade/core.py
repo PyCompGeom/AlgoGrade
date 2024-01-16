@@ -1,4 +1,3 @@
-from math import inf
 from collections import Counter
 from typing import Iterable, Callable, Type, Any
 from pydantic import BaseModel
@@ -37,7 +36,7 @@ class Mistake:
 
 
 class Scoring(BaseModel, frozen=True):
-    min_grade: float = -inf
+    min_grade: float = -1000.0
     max_grade: float = 0.0
     fine: float = 0.0
     repeat_fine: float = 0.0
