@@ -36,21 +36,11 @@ class Mistake:
         return hash((self.__class__, self.scorings))
 
 
-class Scoring:
-    def __init__(self, min_grade=-inf, max_grade=0.0, fine=0.0, repeat_fine=0.0):
-        self.min_grade = min_grade
-        self.max_grade = max_grade
-        self.fine = fine
-        self.repeat_fine = repeat_fine
-    
-    def __eq__(self, other):
-        return (
-            isinstance(other, self.__class__) and
-            set(self.__dict__.values()) == set(other.__dict__.values())
-        )
-    
-    def __hash__(self):
-        return hash(tuple(self.__dict__.values()))
+class Scoring(BaseModel, frozen=True):
+    min_grade: float = -inf
+    max_grade: float = 0.0
+    fine: float = 0.0
+    repeat_fine: float = 0.0
 
 
 class Grader:
