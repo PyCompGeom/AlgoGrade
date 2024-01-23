@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from PyCompGeomAlgorithms.core import PyCGAObject, Point, BinTreeNode, BinTree, ThreadedBinTreeNode, ThreadedBinTree
 from PyCompGeomAlgorithms.dynamic_hull import DynamicHullNode, DynamicHullTree, SubhullNode, SubhullThreadedBinTree
 from PyCompGeomAlgorithms.graham import GrahamStepsTableRow, GrahamStepsTable
-from PyCompGeomAlgorithms.quickhull import QuickhullNode
+from PyCompGeomAlgorithms.quickhull import QuickhullNode, QuickhullTree
 
 
 class PydanticAdapter(BaseModel):
@@ -168,7 +168,7 @@ def pycga_to_pydantic(obj: Any | type | PyCGAObject | Iterable):
         try:
             from .dynamic_hull import DynamicHullNodePydanticAdapter, DynamicHullTreePydanticAdapter, SubhullNodePydanticAdapter, SubhullThreadedBinTreePydanticAdapter
             from .graham import GrahamStepsTableRowPydanticAdapter, GrahamStepsTablePydanticAdapter
-            from .quickhull import QuickhullNodePydanticAdapter
+            from .quickhull import QuickhullNodePydanticAdapter, QuickhullTreePydanticAdapter
             
             return {
                 Point: PointPydanticAdapter,
@@ -182,7 +182,8 @@ def pycga_to_pydantic(obj: Any | type | PyCGAObject | Iterable):
                 SubhullThreadedBinTree: SubhullThreadedBinTreePydanticAdapter,
                 GrahamStepsTableRow: GrahamStepsTableRowPydanticAdapter,
                 GrahamStepsTable: GrahamStepsTablePydanticAdapter,
-                QuickhullNode: QuickhullNodePydanticAdapter
+                QuickhullNode: QuickhullNodePydanticAdapter,
+                QuickhullTree: QuickhullTreePydanticAdapter,
             }[obj]
         except KeyError as e:
             raise KeyError("unknown PyCGA type") from e

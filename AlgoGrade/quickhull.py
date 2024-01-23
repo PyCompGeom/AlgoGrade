@@ -52,7 +52,7 @@ class QuickhullAnswers(Answers):
 
     @classmethod
     def from_iterable(cls, iterable):
-        leftmost_point, rightmost_point, subset1, subset2, tree, *rest = iterable
+        (leftmost_point, rightmost_point, subset1, subset2), tree, *rest = iterable
         return cls(
             leftmost_point=leftmost_point, rightmost_point=rightmost_point,
             subset1=subset1, subset2=subset2, tree=tree

@@ -2,7 +2,7 @@ from copy import deepcopy
 from math import isclose
 from PyCompGeomAlgorithms.core import Point
 from PyCompGeomAlgorithms.graham import GrahamStepsTable, GrahamStepsTableRow
-from AlgoGrade.graham import GrahamGrader, GrahamTask
+from AlgoGrade.graham import GrahamGrader, GrahamTask, GrahamAnswers
 from AlgoGrade.adapters import pycga_to_pydantic
 from AlgoGrade.core import Scoring
 
@@ -19,7 +19,8 @@ points = [
     Point(1, 3),
     Point(5, 2),
 ]
-task = GrahamTask(points)
+givens = (points,)
+task_class = GrahamTask
 scorings = [
     Scoring(max_grade=0.25, fine=0.25),
     Scoring(max_grade=0.25, fine=0.25),
@@ -30,6 +31,9 @@ scorings = [
     Scoring(max_grade=0.6, fine=0.3, repeat_fine=0.6),
     Scoring(max_grade=0.1, fine=0.25)
 ]
+correct_pycga_answers = task_class.solve_as_pycga_list(givens)
+correct_pydantic_answers = task_class.solve_as_pydantic_list(givens)
+correct_answers_wrapper = task_class.solve_as_answers_wrapper(givens)
 
 
 def test_graham_grader_all_correct():
@@ -65,7 +69,7 @@ def test_graham_grader_all_correct():
     triples = [row.point_triple for row in steps_table]
     are_angles_less_than_pi = [row.is_angle_less_than_pi for row in steps_table]
 
-    answers = [
+    pycga_answers = [
         centroid,
         ordered,
         origin,
@@ -75,31 +79,39 @@ def test_graham_grader_all_correct():
         steps_table,
         steps_table
     ]
-    correct_answers = task.correct_answers
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = GrahamAnswers.from_iterable(pydantic_answers)
 
-    total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers, scorings)
+    total_grade, answer_grades = GrahamGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
     assert isclose(total_grade, 2)
 
-    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, scorings, is_pydantic=True)
+    total_grade, answer_grades = GrahamGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, 2)
+
+    total_grade, answer_grades = GrahamGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
     assert isclose(total_grade, 2)
 
 
 def test_graham_grader_incorrect_centroid():
-    correct_answers = task.correct_answers
-    answers = deepcopy(correct_answers)
-    answers[0] = Point(100, 100)
+    pycga_answers = deepcopy(correct_pycga_answers)
+    pycga_answers[0] = Point(100, 100)
 
-    total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers, scorings)
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = GrahamAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = GrahamGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
     assert isclose(total_grade, 1.75)
 
-    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, scorings, is_pydantic=True)
+    total_grade, answer_grades = GrahamGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, 1.75)
+
+    total_grade, answer_grades = GrahamGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
     assert isclose(total_grade, 1.75)
 
 
 def test_graham_grader_incorrect_ordered_points():
-    correct_answers = task.correct_answers
-    answers = deepcopy(correct_answers)
-    answers[1] = [
+    pycga_answers = deepcopy(correct_pycga_answers)
+    pycga_answers[1] = [
         Point(2000, 2000),
         Point(5000, 5000),
         Point(11, 5),
@@ -112,30 +124,40 @@ def test_graham_grader_incorrect_ordered_points():
         Point(5, 6)
     ]
 
-    total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers, scorings)
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = GrahamAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = GrahamGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
     assert isclose(total_grade, 1.75)
 
-    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, scorings, is_pydantic=True)
+    total_grade, answer_grades = GrahamGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, 1.75)
+
+    total_grade, answer_grades = GrahamGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
     assert isclose(total_grade, 1.75)
 
 
 def test_graham_grader_incorrect_origin():
-    correct_answers = task.correct_answers
-    answers = deepcopy(correct_answers)
-    answers[2] = Point(100, 100)
+    pycga_answers = deepcopy(correct_pycga_answers)
+    pycga_answers[2] = Point(100, 100)
 
-    total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers, scorings)
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = GrahamAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = GrahamGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
     assert isclose(total_grade, 1.75)
 
-    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, scorings, is_pydantic=True)
+    total_grade, answer_grades = GrahamGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, 1.75)
+
+    total_grade, answer_grades = GrahamGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
     assert isclose(total_grade, 1.75)
 
 
 def test_graham_grader_incorrect_triples():
-    correct_answers = task.correct_answers
-    answers = deepcopy(correct_answers)
-    ordered = answers[1]
-    answers[3] = [
+    pycga_answers = deepcopy(correct_pycga_answers)
+    ordered = pycga_answers[1]
+    pycga_answers[3] = [
         (ordered[0], ordered[0], ordered[0]),
         (ordered[0], ordered[0], ordered[0]),
         (ordered[2], ordered[3], ordered[4]),
@@ -150,79 +172,112 @@ def test_graham_grader_incorrect_triples():
         (ordered[7], ordered[8], ordered[0])
     ]
 
-    total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers, scorings)
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = GrahamAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = GrahamGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
     assert isclose(total_grade, 1.85)
 
-    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, scorings, is_pydantic=True)
+    total_grade, answer_grades = GrahamGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, 1.85)
+
+    total_grade, answer_grades = GrahamGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
     assert isclose(total_grade, 1.85)
 
 
 def test_graham_grader_incorrect_are_angles_less_than_pi():
-    correct_answers = task.correct_answers
-    answers = deepcopy(correct_answers)
-    answers[4] = [False for _ in answers[4]]
+    pycga_answers = deepcopy(correct_pycga_answers)
+    pycga_answers[4] = [False for _ in pycga_answers[4]]
 
-    total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers, scorings)
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = GrahamAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = GrahamGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
     assert isclose(total_grade, 1.85)
 
-    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, scorings, is_pydantic=True)
+    total_grade, answer_grades = GrahamGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, 1.85)
+
+    total_grade, answer_grades = GrahamGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
     assert isclose(total_grade, 1.85)
 
 
 def test_graham_grader_incorrect_rows_with_angles_less_than_pi():
-    correct_answers = task.correct_answers
-    answers = deepcopy(correct_answers)
-    ordered = answers[1]
+    pycga_answers = deepcopy(correct_pycga_answers)
+    ordered = pycga_answers[1]
     incorrect_point = Point(1000, 1000)
 
-    answers[5][7] = GrahamStepsTableRow((ordered[5], ordered[6], incorrect_point), True)
-    answers[5][8] = GrahamStepsTableRow((ordered[6], ordered[7], incorrect_point), True)
+    pycga_answers[5][7] = GrahamStepsTableRow((ordered[5], ordered[6], incorrect_point), True)
+    pycga_answers[5][8] = GrahamStepsTableRow((ordered[6], ordered[7], incorrect_point), True)
     
-    total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers, scorings)
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = GrahamAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = GrahamGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
     assert isclose(total_grade, 1.75)
 
-    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, scorings, is_pydantic=True)
+    total_grade, answer_grades = GrahamGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, 1.75)
+
+    total_grade, answer_grades = GrahamGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
     assert isclose(total_grade, 1.75)
 
 
 def test_graham_grader_incorrect_rows_with_angles_not_less_than_pi_single():
-    correct_answers = task.correct_answers
-    answers = deepcopy(correct_answers)
-    ordered = answers[1]
+    pycga_answers = deepcopy(correct_pycga_answers)
+    ordered = pycga_answers[1]
     incorrect_point = Point(1000, 1000)
 
-    answers[5][1] = GrahamStepsTableRow((ordered[0], ordered[2], incorrect_point), True)
+    pycga_answers[5][1] = GrahamStepsTableRow((ordered[0], ordered[2], incorrect_point), True)
     
-    total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers, scorings)
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = GrahamAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = GrahamGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
     assert isclose(total_grade, 1.45) # also triggers "rows with angles < pi" grading
 
-    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, scorings, is_pydantic=True)
+    total_grade, answer_grades = GrahamGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, 1.45)
+
+    total_grade, answer_grades = GrahamGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
     assert isclose(total_grade, 1.45)
 
 
 def test_graham_grader_incorrect_rows_with_angles_not_less_than_pi_repeated():
-    correct_answers = task.correct_answers
-    answers = deepcopy(correct_answers)
+    pycga_answers = deepcopy(correct_pycga_answers)
     incorrect_point = Point(1000, 1000)
 
-    answers[5][1] = GrahamStepsTableRow((incorrect_point, incorrect_point, incorrect_point), True)
-    answers[5][5] = GrahamStepsTableRow((incorrect_point, incorrect_point, incorrect_point), True)
+    pycga_answers[5][1] = GrahamStepsTableRow((incorrect_point, incorrect_point, incorrect_point), True)
+    pycga_answers[5][5] = GrahamStepsTableRow((incorrect_point, incorrect_point, incorrect_point), True)
     
-    total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers, scorings)
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = GrahamAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = GrahamGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
     assert isclose(total_grade, 1.15) # also triggers "rows with angles < pi" grading
 
-    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, scorings, is_pydantic=True)
+    total_grade, answer_grades = GrahamGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, 1.15)
+
+    total_grade, answer_grades = GrahamGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
     assert isclose(total_grade, 1.15)
 
 
 def test_graham_grader_incorrect_finalization():
-    correct_answers = task.correct_answers
-    answers = deepcopy(correct_answers)
-    ordered = answers[1]
-    answers[6][7] = GrahamStepsTableRow((ordered[5], ordered[0], ordered[7]), True)
+    pycga_answers = deepcopy(correct_pycga_answers)
+    ordered = pycga_answers[1]
+    pycga_answers[6][7] = GrahamStepsTableRow((ordered[5], ordered[0], ordered[7]), True)
 
-    total_grade, answer_grades = GrahamGrader.grade(answers, correct_answers, scorings)
-    assert isclose(total_grade, 1.5) # also triggers "rows with angles <pi" grading
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = GrahamAnswers.from_iterable(pydantic_answers)
 
-    total_grade, answer_grades = GrahamGrader.grade(pycga_to_pydantic(answers), correct_answers, scorings, is_pydantic=True)
+    total_grade, answer_grades = GrahamGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    assert isclose(total_grade, 1.5) # also triggers "rows with angles < pi" grading
+
+    total_grade, answer_grades = GrahamGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
     assert isclose(total_grade, 1.5)
+
+    total_grade, answer_grades = GrahamGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
+    assert isclose(total_grade, 1.5)
+
+

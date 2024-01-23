@@ -44,10 +44,11 @@ class Scoring(BaseModel, frozen=True):
 
 class Grader:
     @classmethod
-    def grade(cls, answers, correct_answers, scorings, is_pydantic=False):
-        if is_pydantic:
-            answers = pydantic_to_pycga(answers)
-
+    def grade_pycga(cls, answers, correct_answers, scorings):
+        """
+            Compare answers to correct_answers (both in PyCGA format) an return a tuple
+            `(total_grade, answers_grades)`, where answers_grades is a list of tuples--grades for each answer `(answer, grade)` in PyCGA format.
+        """
         mistake_lists = [
             grading_method(answer, correct_answer, scorings)
             for grading_method, answer, correct_answer, scorings
@@ -62,17 +63,31 @@ class Grader:
             for mistake_counter in mistake_counters
         ]
 
-        if is_pydantic:
-            answers = pycga_to_pydantic(answers)
-
-        answer_grades = [
+        answers_grades = [
             (answer, max(scorings.min_grade, scorings.max_grade-sum(mistake_fine_dict.values())))
             for answer, scorings, mistake_fine_dict
             in zip(answers, scorings, mistake_fines_dicts)
         ]
-        total_grade = sum(grade for answer, grade in answer_grades)
+        total_grade = sum(grade for answer, grade in answers_grades)
         
-        return total_grade, answer_grades
+        return total_grade, answers_grades
+    
+    @classmethod
+    def grade_pydantic(cls, answers, correct_answers, scorings):
+        """
+            Compare answers to correct_answers (both in PydanticAdapter format) an return a tuple
+            `(total_grade, answers_grades)`, where answers_grades is a list of tuples--grades for each answer `(answer, grade)` in PydanticAdapter format.
+        """
+        total_grade, answers_grades = cls.grade_pycga(pydantic_to_pycga(answers), pydantic_to_pycga(correct_answers), scorings)
+        return total_grade, [(pycga_to_pydantic(answer), grade) for answer, grade in answers_grades]
+    
+    @classmethod
+    def grade_answers_wrapper(cls, answers: Answers, correct_answers: Answers, scorings):
+        """
+            Compare answers to correct_answers (both in Answers format) an return a tuple
+            `(total_grade, answers_grades)`, where answers_grades is a list of tuples--grades for each answer `(answer, grade)` in PydanticAdapter format.
+        """
+        return cls.grade_pydantic(answers.to_pydantic_list(), correct_answers.to_pydantic_list(), scorings)
     
     @classmethod
     def grade_default(cls, answer, correct_answer, scorings, item_mistake_text=""):
@@ -151,12 +166,23 @@ class Task:
     grader_class: Type[Grader] = None
     answers_class: Type[Answers] = None
     given_parser_class: Type[GivenJSONParser] = None
-
+    
     @classmethod
-    def solve(cls, givens: str):
-        givens = cls.given_parser_class.parse(givens)
-        pycga_answers = list(cls.algorithm(*givens))
-        return cls.answers_class.from_iterable(pycga_to_pydantic(pycga_answers))
+    def solve_as_pycga_list(cls, givens: Iterable):
+        """Solves a task with the givens provided in PyCGA format and returns a list of answers in PyCGA format."""
+        return list(cls.algorithm(*givens))
+    
+    @classmethod
+    def solve_as_pydantic_list(cls, givens: Iterable):
+        """Solves a task with the givens provided in PyCGA format and returns a list of answers in PydanticAdapter format."""
+        pycga_answers = list(cls.solve_as_pycga_list(givens))
+        return pycga_to_pydantic(pycga_answers)
+    
+    @classmethod
+    def solve_as_answers_wrapper(cls, givens: Iterable):
+        """Solves a task with the givens provided in PyCGA format and returns answers in form of the respective Answers wrapper."""
+        pydantic_answers = cls.solve_as_pydantic_list(givens)
+        return cls.answers_class.from_iterable(pydantic_answers)
 
 
 def flatten(iterable):

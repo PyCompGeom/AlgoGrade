@@ -125,7 +125,7 @@ class DynamicHullAnswers(Answers):
 
     @classmethod
     def from_iterable(cls, iterable):
-        leaves, tree, optimized_tree, path, modified_tree, hull, *rest = iterable
+        leaves, tree, _, _, _, optimized_tree, path, (modified_tree, hull), *rest = iterable
         return cls(
             leaves=leaves, tree=tree, optimized_tree=optimized_tree,
             path=path, modified_tree=modified_tree, hull=hull

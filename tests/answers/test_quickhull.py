@@ -12,9 +12,8 @@ def test_quickhull_answers():
         leftmost_point=leftmost_point, rightmost_point=rightmost_point,
         subset1=subset1, subset2=subset2, tree=tree
     )
-    answers_list_args = [leftmost_point, rightmost_point, subset1, subset2, tree]
-    answers_list_ret = [(leftmost_point, rightmost_point, subset1, subset2), tree, tree, tree, tree]
+    answers_list = [(leftmost_point, rightmost_point, subset1, subset2), tree, tree, tree, tree]
 
-    assert answers_model.to_pydantic_list() == answers_list_ret
-    assert answers_model.to_pycga_list() == pydantic_to_pycga(answers_list_ret)
-    assert QuickhullAnswers.from_iterable(answers_list_args) == answers_model
+    assert answers_model.to_pydantic_list() == answers_list
+    assert answers_model.to_pycga_list() == pydantic_to_pycga(answers_list)
+    assert QuickhullAnswers.from_iterable(answers_list) == answers_model

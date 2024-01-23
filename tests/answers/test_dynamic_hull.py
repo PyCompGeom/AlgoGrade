@@ -22,9 +22,8 @@ def test_dynamic_hull_answers():
         leaves=leaves, tree=tree, optimized_tree=optimized_tree,
         path=path, modified_tree=modified_tree, hull=hull
     )
-    answers_list_args = [leaves, tree, optimized_tree, path, modified_tree, hull]
-    answers_list_ret = [leaves, tree, tree, tree, tree, optimized_tree, path, (modified_tree, hull)]
+    answers_list = [leaves, tree, tree, tree, tree, optimized_tree, path, (modified_tree, hull)]
 
-    assert answers_model.to_pydantic_list() == answers_list_ret
-    assert answers_model.to_pycga_list() == pydantic_to_pycga(answers_list_ret)
-    assert DynamicHullAnswers.from_iterable(answers_list_args) == answers_model
+    assert answers_model.to_pydantic_list() == answers_list
+    assert answers_model.to_pycga_list() == pydantic_to_pycga(answers_list)
+    assert DynamicHullAnswers.from_iterable(answers_list) == answers_model
