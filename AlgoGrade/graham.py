@@ -107,23 +107,45 @@ class GrahamAnswers(Answers):
     centroid: PointPydanticAdapter
     ordered_points: list[PointPydanticAdapter]
     origin: PointPydanticAdapter
-    point_triples: list[tuple[PointPydanticAdapter, PointPydanticAdapter, PointPydanticAdapter]]
-    are_angles_less_than_pi: list[bool]
     steps_table: GrahamStepsTablePydanticAdapter
+    point_triples_: list[tuple[PointPydanticAdapter, PointPydanticAdapter, PointPydanticAdapter]] | None = None
+    are_angles_less_than_pi_: list[bool] | None = None
 
     @classmethod
     def from_iterable(cls, iterable):
-        centroid, ordered_points, origin, point_triples, are_angles_less_than_pi, steps_table, *rest = iterable
-        return cls(
-            centroid=centroid, ordered_points=ordered_points, origin=origin, point_triples=point_triples,
-            are_angles_less_than_pi=are_angles_less_than_pi, steps_table=steps_table
-        )
-    
+        centroid, ordered_points, origin, point_triples, are_angles_less_than_pi, steps_table, *rest = iterable        
+        return cls(centroid=centroid, ordered_points=ordered_points, origin=origin, steps_table=steps_table, point_triples_=point_triples, are_angles_less_than_pi_=are_angles_less_than_pi)
+
+    @property
+    def point_triples(self):
+        return self.point_triples_ or [row.point_triple for row in self.steps_table.rows]
+
+    @property
+    def are_angles_less_than_pi(self):
+        return self.are_angles_less_than_pi_ or [row.is_angle_less_than_pi for row in self.steps_table.rows]
+
     def to_pydantic_list(self):
         return [
             self.centroid, self.ordered_points, self.origin, self.point_triples,
             self.are_angles_less_than_pi, self.steps_table, self.steps_table, self.steps_table
         ]
+    
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            tmp_triples = other.point_triples_
+            tmp_angles = other.are_angles_less_than_pi_
+
+            other.point_triples_ = self.point_triples_
+            other.are_angles_less_than_pi_ = self.are_angles_less_than_pi_
+
+            are_equal = super().__eq__(other)
+
+            other.point_triples_ = tmp_triples
+            other.are_angles_less_than_pi_ = tmp_angles
+
+            return are_equal
+
+        return False
 
 
 class GrahamTask(Task):
