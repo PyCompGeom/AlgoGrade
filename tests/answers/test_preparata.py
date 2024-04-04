@@ -1,11 +1,11 @@
-from AlgoGrade.adapters import PointPydanticAdapter, ThreadedBinTreePydanticAdapter, ThreadedBinTreeNodePydanticAdapter, pydantic_to_pycga
-from AlgoGrade.preparata import PreparataAnswers
+from AlgoGrade.adapters import PointPydanticAdapter, pydantic_to_pycga
+from AlgoGrade.preparata import PreparataNodePydanticAdapter, PreparataThreadedBinTreePydanticAdapter, PreparataAnswers
 
 
 def test_preparata_answers():
     point = PointPydanticAdapter(coords=(1, 1))
     hull = [point]
-    tree = ThreadedBinTreePydanticAdapter(root=ThreadedBinTreeNodePydanticAdapter(data=point))
+    tree = PreparataThreadedBinTreePydanticAdapter(root=PreparataNodePydanticAdapter(data=point))
     left_paths, right_paths = [[point]], [[point]]
     deleted_points = []
     hulls, trees = [hull], [tree]

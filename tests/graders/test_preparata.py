@@ -1,6 +1,7 @@
 from math import isclose
 from copy import deepcopy
-from PyCompGeomAlgorithms.core import Point, ThreadedBinTree
+from PyCompGeomAlgorithms.core import Point
+from PyCompGeomAlgorithms.preparata import PreparataThreadedBinTree
 from AlgoGrade.preparata import PreparataGrader, PreparataTask, PreparataAnswers
 from AlgoGrade.adapters import pycga_to_pydantic
 from AlgoGrade.core import Scoring
@@ -23,7 +24,7 @@ correct_answers_wrapper = task_class.solve_as_answers_wrapper(givens)
 def test_preparata_all_correct():
     hull0 = [Point(1, 1), Point(1, 5), Point(5, 3)]
     hull = [Point(1, 1), Point(1, 11), Point(10, 1)]
-    tree0 = ThreadedBinTree.from_iterable(hull0)
+    tree0 = PreparataThreadedBinTree.from_iterable(hull0)
     left_paths = [
         [Point(1, 5), Point(5, 3)],
         [Point(1, 11), Point(5, 3), Point(1, 1)],
@@ -40,7 +41,7 @@ def test_preparata_all_correct():
         [Point(1, 1), Point(1, 11), Point(6, 1)],
         hull
     ]
-    trees = [ThreadedBinTree.from_iterable(hulls[0]), ThreadedBinTree.from_iterable(hulls[1])]
+    trees = [PreparataThreadedBinTree.from_iterable(hulls[0]), PreparataThreadedBinTree.from_iterable(hulls[1])]
 
     pycga_answers = [(hull0, tree0), (left_paths, right_paths), deleted_points, (hulls, trees)]
     pydantic_answers = pycga_to_pydantic(pycga_answers)
@@ -295,7 +296,7 @@ def test_preparata_grader_incorrect_trees_repeated():
     
     trees = pycga_answers[3][1]
     trees[0].root.data = Point(100, 100)
-    trees[0].root.left.data = None
+    trees[0].root.left.data = Point(-1, -1)
     trees[1].root.data = Point(100, 100)
 
     pydantic_answers = pycga_to_pydantic(pycga_answers)
@@ -320,7 +321,7 @@ def test_preparata_grader_incorrect_trees_and_hulls():
     
     trees = pycga_answers[3][1]
     trees[0].root.data = Point(100, 100)
-    trees[0].root.left.data = None
+    trees[0].root.left.data = Point(-1, -1)
     trees[1].root.data = Point(100, 100)
 
     pydantic_answers = pycga_to_pydantic(pycga_answers)

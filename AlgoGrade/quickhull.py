@@ -1,5 +1,6 @@
+from __future__ import annotations
 from functools import partial
-from typing import ClassVar, Optional
+from typing import ClassVar, Optional, Union
 from PyCompGeomAlgorithms.core import BinTree
 from PyCompGeomAlgorithms.quickhull import quickhull, QuickhullNode
 from .adapters import pycga_to_pydantic, PointPydanticAdapter, BinTreeNodePydanticAdapter, BinTreePydanticAdapter
@@ -25,6 +26,9 @@ class QuickhullGrader(Grader):
 
 class QuickhullNodePydanticAdapter(BinTreeNodePydanticAdapter):
     regular_class: ClassVar[type] = QuickhullNode
+    data: list[PointPydanticAdapter]
+    left: Optional[QuickhullNodePydanticAdapter] = None
+    right: Optional[QuickhullNodePydanticAdapter] = None
     h: Optional[PointPydanticAdapter] = None
     subhull: Optional[list[PointPydanticAdapter]] = None
 

@@ -1,10 +1,14 @@
+from __future__ import annotations
 from functools import cached_property
-from typing import Any, ClassVar, Optional, Iterable, Generator
+from typing import Any, ClassVar, Optional, Iterable, Generator, Union
 from enum import Enum
+from copy import deepcopy
+from typing_extensions import Literal
 from pydantic import BaseModel
 from PyCompGeomAlgorithms.core import PyCGAObject, Point, BinTreeNode, BinTree, ThreadedBinTreeNode, ThreadedBinTree
 from PyCompGeomAlgorithms.dynamic_hull import DynamicHullNode, DynamicHullTree, SubhullNode, SubhullThreadedBinTree
 from PyCompGeomAlgorithms.graham import GrahamStepsTableRow, GrahamStepsTable
+from PyCompGeomAlgorithms.preparata import PreparataNode, PreparataThreadedBinTree
 from PyCompGeomAlgorithms.quickhull import QuickhullNode, QuickhullTree
 
 
@@ -56,9 +60,9 @@ class PointPydanticAdapter(PydanticAdapter):
 
 class BinTreeNodePydanticAdapter(PydanticAdapter):
     regular_class: ClassVar[type] = BinTreeNode
-    data: Any
-    left: Optional[Any] = None
-    right: Optional[Any] = None
+    data: Any # WARNING: do not leave Any in derived classes, override with specifying that type! (Otherwise it might come out as underserialized portion of JSON when deserializing)
+    left: Optional[BinTreeNodePydanticAdapter] = None
+    right: Optional[BinTreeNodePydanticAdapter] = None
 
     @classmethod
     def from_regular_object(cls, obj: BinTreeNode, **kwargs):
@@ -98,10 +102,65 @@ class BinTreePydanticAdapter(PydanticAdapter):
         return self.root.traverse_inorder() if self.root else []
 
 
+def serialize_threaded_bin_tree_root_or_tree(root_or_tree: ThreadedBinTreeNodePydanticAdapter | ThreadedBinTreePydanticAdapter, *args, **kwargs):
+    """
+        Serializes both a threaded bin tree or its root.
+    """
+    copy = deepcopy(root_or_tree)
+    nodes_inorder = copy.traverse_inorder() if isinstance(copy, ThreadedBinTreeNodePydanticAdapter) else copy.root.traverse_inorder()
+    is_circular = nodes_inorder and nodes_inorder[0].prev is nodes_inorder[-1]
+
+    # Store node positions in inorder traversal instead of nodes to avoid infinite loops and be able to convert the tree to JSON
+    for i, node in enumerate(nodes_inorder):
+        node.prev = (i - 1) % len(nodes_inorder)
+        node.next = (i + 1) % len(nodes_inorder)
+    
+    if not is_circular and nodes_inorder:
+        nodes_inorder[0].prev = None
+        nodes_inorder[-1].next = None
+
+    return copy.model_dump(*args, **(kwargs | {'can_serialize': True}))
+
+
+def deserialize_threaded_bin_tree_root(root):
+    nodes_inorder = root.traverse_inorder()
+    is_circular = (
+        nodes_inorder
+        and nodes_inorder[0].prev is not None
+        and nodes_inorder[-1].next is not None
+        and (
+            (nodes_inorder[-1].next == 0)                     # if the object comes from JSON, this checks the node indices (see serialize_threaded_bin_tree_root)
+            if isinstance(nodes_inorder[0].prev, int)
+            else (nodes_inorder[0].prev is nodes_inorder[-1]) # if the object comes from Python objects, this checks the nodes 
+        )
+    )
+
+    for i, node in enumerate(nodes_inorder):
+        node.prev = nodes_inorder[i-1]
+        node.next = nodes_inorder[(i + 1) % len(nodes_inorder)]
+    
+    if not is_circular and nodes_inorder:
+        nodes_inorder[0].prev = None
+        nodes_inorder[-1].next = None
+
+
 class ThreadedBinTreeNodePydanticAdapter(BinTreeNodePydanticAdapter):
     regular_class: ClassVar[type] = ThreadedBinTreeNode
-    prev: Optional[Any] = None
-    next: Optional[Any] = None
+    left: Optional[ThreadedBinTreeNodePydanticAdapter] = None
+    right: Optional[ThreadedBinTreeNodePydanticAdapter] = None
+    prev: Optional[Union[ThreadedBinTreeNodePydanticAdapter, int]] = None
+    next: Optional[Union[ThreadedBinTreeNodePydanticAdapter, int]] = None
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        deserialize_threaded_bin_tree_root(self)  
+    
+    def model_dump(self, *args, **kwargs):
+        if kwargs.get('can_serialize', False):
+            kwargs.pop('can_serialize')
+            return super().model_dump(*args, **kwargs)
+        
+        return serialize_threaded_bin_tree_root_or_tree(self, *args, **kwargs)
 
     @cached_property
     def regular_object(self):
@@ -119,6 +178,17 @@ class ThreadedBinTreeNodePydanticAdapter(BinTreeNodePydanticAdapter):
 class ThreadedBinTreePydanticAdapter(BinTreePydanticAdapter):
     regular_class: ClassVar[type] = ThreadedBinTree
     root: ThreadedBinTreeNodePydanticAdapter
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        deserialize_threaded_bin_tree_root(self.root)
+
+    def model_dump(self, *args, **kwargs):
+        if kwargs.get('can_serialize', False):
+            kwargs.pop('can_serialize')
+            return super().model_dump(*args, **kwargs)
+        
+        return serialize_threaded_bin_tree_root_or_tree(self, *args, **kwargs)
 
     @classmethod
     def from_regular_object(cls, obj: ThreadedBinTree, **kwargs):
@@ -168,6 +238,7 @@ def pycga_to_pydantic(obj: Any | type | PyCGAObject | Iterable):
         try:
             from .dynamic_hull import DynamicHullNodePydanticAdapter, DynamicHullTreePydanticAdapter, SubhullNodePydanticAdapter, SubhullThreadedBinTreePydanticAdapter
             from .graham import GrahamStepsTableRowPydanticAdapter, GrahamStepsTablePydanticAdapter
+            from .preparata import PreparataNodePydanticAdapter, PreparataThreadedBinTreePydanticAdapter
             from .quickhull import QuickhullNodePydanticAdapter, QuickhullTreePydanticAdapter
             
             return {
@@ -182,6 +253,8 @@ def pycga_to_pydantic(obj: Any | type | PyCGAObject | Iterable):
                 SubhullThreadedBinTree: SubhullThreadedBinTreePydanticAdapter,
                 GrahamStepsTableRow: GrahamStepsTableRowPydanticAdapter,
                 GrahamStepsTable: GrahamStepsTablePydanticAdapter,
+                PreparataNode: PreparataNodePydanticAdapter,
+                PreparataThreadedBinTree: PreparataThreadedBinTreePydanticAdapter,
                 QuickhullNode: QuickhullNodePydanticAdapter,
                 QuickhullTree: QuickhullTreePydanticAdapter,
             }[obj]

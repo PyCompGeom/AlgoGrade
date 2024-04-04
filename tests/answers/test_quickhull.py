@@ -6,7 +6,7 @@ def test_quickhull_answers():
     point = PointPydanticAdapter(coords=(1, 1))
     leftmost_point, rightmost_point = point, point
     subset1, subset2 = [point], [point]
-    tree = QuickhullTreePydanticAdapter(root=QuickhullNodePydanticAdapter(data=point))
+    tree = QuickhullTreePydanticAdapter(root=QuickhullNodePydanticAdapter(data=[point]))
 
     answers_model = QuickhullAnswers(
         leftmost_point=leftmost_point, rightmost_point=rightmost_point,

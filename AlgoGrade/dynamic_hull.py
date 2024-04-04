@@ -1,5 +1,6 @@
+from __future__ import annotations
 from functools import partial, cached_property
-from typing import ClassVar, Optional
+from typing import ClassVar, Optional, Union
 from PyCompGeomAlgorithms.core import BinTree, BinTreeNode, ThreadedBinTree, ThreadedBinTreeNode
 from PyCompGeomAlgorithms.dynamic_hull import upper_dynamic_hull, DynamicHullNode, DynamicHullTree, SubhullNode, SubhullThreadedBinTree, PathDirection
 from .adapters import pycga_to_pydantic, pydantic_to_pycga, PointPydanticAdapter, BinTreeNodePydanticAdapter, BinTreePydanticAdapter, ThreadedBinTreeNodePydanticAdapter, ThreadedBinTreePydanticAdapter
@@ -70,6 +71,9 @@ class DynamicHullGrader(Grader):
 
 class DynamicHullNodePydanticAdapter(BinTreeNodePydanticAdapter):
     regular_class: ClassVar[type] = DynamicHullNode
+    data: PointPydanticAdapter
+    left: Optional[DynamicHullNodePydanticAdapter] = None
+    right: Optional[DynamicHullNodePydanticAdapter] = None
     subhull_points: list[PointPydanticAdapter]
     optimized_subhull_points: Optional[list[PointPydanticAdapter]] = None
     left_supporting_index: int = 0
@@ -100,6 +104,11 @@ class DynamicHullTreePydanticAdapter(BinTreePydanticAdapter):
 
 class SubhullNodePydanticAdapter(ThreadedBinTreeNodePydanticAdapter):
     regular_class: ClassVar[type] = SubhullNode
+    data: PointPydanticAdapter
+    left: Optional[SubhullNodePydanticAdapter] = None
+    right: Optional[SubhullNodePydanticAdapter] = None
+    prev: Optional[Union[SubhullNodePydanticAdapter, int]] = None
+    next: Optional[Union[SubhullNodePydanticAdapter, int]] = None
 
     @classmethod
     def from_regular_object(cls, obj: SubhullNode, **kwargs):
