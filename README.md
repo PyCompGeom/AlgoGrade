@@ -1,2 +1,2 @@
 # AlgoGrade
-A library for grading algorithmic tasks.
+A library for grading algorithm-based tasks.
