@@ -190,7 +190,7 @@ class ThreadedBinTreeNodePydanticAdapter(BinTreeNodePydanticAdapter):
     def model_dump(self, *args, **kwargs):
         if kwargs.get('can_serialize', False):
             kwargs.pop('can_serialize')
-            return super().model_dump(*args, **kwargs)
+            return BaseModel.model_dump(self, *args, **kwargs)
         
         return serialize_threaded_bin_tree_root_or_tree(self, *args, **kwargs)
 
@@ -217,7 +217,7 @@ class ThreadedBinTreePydanticAdapter(BinTreePydanticAdapter):
     def model_dump(self, *args, **kwargs):
         if kwargs.get('can_serialize', False):
             kwargs.pop('can_serialize')
-            return super().model_dump(*args, **kwargs)
+            return BaseModel.model_dump(self, *args, **kwargs)
         
         return serialize_threaded_bin_tree_root_or_tree(self, *args, **kwargs)
 
