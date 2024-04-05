@@ -1,5 +1,4 @@
 from __future__ import annotations
-from functools import cached_property
 from typing import Any, ClassVar, Optional, Iterable, Generator, Union
 from enum import Enum
 from copy import deepcopy
@@ -12,14 +11,48 @@ from PyCompGeomAlgorithms.preparata import PreparataNode, PreparataThreadedBinTr
 from PyCompGeomAlgorithms.quickhull import QuickhullNode, QuickhullTree
 
 
-class PydanticAdapter(BaseModel):
+class SerializablePydanticModelWithPydanticFields(BaseModel):
+    """
+        A class to ensure correct serialization of Pydantic models that have other Pydantic models' instances as fields
+        with possible cyclic references whose custom serialization is specified in those models.
+    """
+    def model_dump(self, *args, **kwargs):
+        tmp_fields_dict = {}
+        this_utility_class = SerializablePydanticModelWithPydanticFields
+
+        for field, value in self.__dict__.items():
+            tmp_fields_dict[field] = value
+            
+            if isinstance(value, this_utility_class):
+                setattr(self, field, value.model_dump())
+            elif isinstance(value, dict):
+                setattr(
+                    self,
+                    field,
+                    {
+                        (k.model_dump() if isinstance(k, this_utility_class) else k): (v.model_dump() if isinstance(v, this_utility_class) else v)
+                        for k, v in value.items()
+                    }
+                )
+            elif not isinstance(value, str) and not isinstance(value, BaseModel) and isinstance(value, Iterable): # BaseModel's are Iterables, but we don't need them to be checked here 
+                generator = (item.model_dump() if isinstance(item, this_utility_class) else item for item in value)
+                setattr(self, field, generator if isinstance(value, Generator) else value.__class__(generator))
+                
+        result = super().model_dump(*args, **kwargs)
+
+        for field, value in tmp_fields_dict.items():
+            setattr(self, field, value)
+        
+        return result
+
+
+class PydanticAdapter(SerializablePydanticModelWithPydanticFields):
     regular_class: ClassVar[type] = object
 
     @classmethod
     def from_regular_object(cls, obj, **kwargs):
         raise NotImplementedError
 
-    @cached_property
     def regular_object(self):
         return self.regular_class(**{
             field: self._regular_object(value)
@@ -29,7 +62,7 @@ class PydanticAdapter(BaseModel):
     @classmethod
     def _regular_object(cls, obj):
         if isinstance(obj, PydanticAdapter):
-            return obj.regular_object
+            return obj.regular_object()
         if isinstance(obj, dict):
             return {cls._regular_object(key): cls._regular_object(value) for key, value in obj.items()}
         if isinstance(obj, Iterable) and not isinstance(obj, str):
@@ -39,10 +72,10 @@ class PydanticAdapter(BaseModel):
         return obj
 
     def __eq__(self, other):
-        return self.regular_object == (other.regular_object if isinstance(other, self.__class__) else other)
+        return self.regular_object() == (other.regular_object() if isinstance(other, self.__class__) else other)
     
     def __hash__(self):
-        return hash(self.regular_object)
+        return hash(self.regular_object())
 
 
 class PointPydanticAdapter(PydanticAdapter):
@@ -53,7 +86,6 @@ class PointPydanticAdapter(PydanticAdapter):
     def from_regular_object(cls, obj: Point, **kwargs):
         return cls(coords=obj.coords, **kwargs)
 
-    @cached_property
     def regular_object(self):
         return self.regular_class(*self.coords)
 
@@ -162,12 +194,11 @@ class ThreadedBinTreeNodePydanticAdapter(BinTreeNodePydanticAdapter):
         
         return serialize_threaded_bin_tree_root_or_tree(self, *args, **kwargs)
 
-    @cached_property
     def regular_object(self):
         return self.regular_class(
-            self.data.regular_object if isinstance(self.data, PydanticAdapter) else self.data,
-            self.left.regular_object if self.left else None,
-            self.right.regular_object if self.right else None
+            self.data.regular_object() if isinstance(self.data, PydanticAdapter) else self.data,
+            self.left.regular_object() if self.left else None,
+            self.right.regular_object() if self.right else None
         )
     
     @classmethod
@@ -207,21 +238,20 @@ class ThreadedBinTreePydanticAdapter(BinTreePydanticAdapter):
         
         return cls(root=root, **kwargs)
 
-    @cached_property
     def regular_object(self):
         node = self.root
         while node.next is not None and node.next is not self.root:
             node = node.next
         
         is_circular = node.next is self.root
-        regular_root = self.root.regular_object
+        regular_root = self.root.regular_object()
 
         return self.regular_class.from_iterable([node.data for node in regular_root.traverse_inorder()], is_circular)
 
 
 def pydantic_to_pycga(obj: Any | PydanticAdapter | Iterable):    
     if isinstance(obj, PydanticAdapter):
-        return obj.regular_object
+        return obj.regular_object()
 
     if isinstance(obj, dict):
         return {pydantic_to_pycga(key): pydantic_to_pycga(value) for key, value in obj.items()}

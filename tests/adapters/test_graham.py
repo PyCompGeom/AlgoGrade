@@ -28,14 +28,14 @@ def table_adapter(table_row_adapter):
 def test_steps_table_row_adapter(table_row_adapter):
     regular_object = GrahamStepsTableRow((Point(1, 1), Point(2, 2), Point(3, 3)), True)
 
-    assert table_row_adapter.regular_object == regular_object
+    assert table_row_adapter.regular_object() == regular_object
     assert GrahamStepsTableRowPydanticAdapter.from_regular_object(regular_object) == table_row_adapter
 
 
 def test_steps_table_row_adapter_serializaion(table_row_adapter):
     serialized_row = table_row_adapter.model_dump()
     deserialized_row = GrahamStepsTableRowPydanticAdapter(**serialized_row)
-    assert deserialized_row.regular_object == table_row_adapter.regular_object
+    assert deserialized_row.regular_object() == table_row_adapter.regular_object()
 
 
 def test_steps_table_adapter(table_adapter):
@@ -44,11 +44,11 @@ def test_steps_table_adapter(table_adapter):
         [GrahamStepsTableRow((Point(1, 1), Point(2, 2), Point(3, 3)), True)]
     )
 
-    assert table_adapter.regular_object == regular_object
+    assert table_adapter.regular_object() == regular_object
     assert GrahamStepsTablePydanticAdapter.from_regular_object(regular_object) == table_adapter
 
 
 def test_steps_table_adapter_serialization(table_adapter):
     serialized_table = table_adapter.model_dump()
     deserialized_table = GrahamStepsTablePydanticAdapter(**serialized_table)
-    assert deserialized_table.regular_object == table_adapter.regular_object
+    assert deserialized_table.regular_object() == table_adapter.regular_object()

@@ -26,3 +26,4 @@ def test_graham_answers():
     assert answers_model.to_pydantic_list() == answers_list
     assert answers_model.to_pycga_list() == pydantic_to_pycga(answers_list)
     assert GrahamAnswers.from_iterable(answers_list) == answers_model
+    assert GrahamAnswers(**answers_model.model_dump()) == answers_model

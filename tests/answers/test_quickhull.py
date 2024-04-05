@@ -17,3 +17,4 @@ def test_quickhull_answers():
     assert answers_model.to_pydantic_list() == answers_list
     assert answers_model.to_pycga_list() == pydantic_to_pycga(answers_list)
     assert QuickhullAnswers.from_iterable(answers_list) == answers_model
+    assert QuickhullAnswers(**answers_model.model_dump()) == answers_model

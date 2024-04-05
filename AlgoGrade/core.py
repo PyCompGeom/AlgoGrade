@@ -1,10 +1,10 @@
 from collections import Counter
 from typing import Iterable, Callable, Type, Any
 from pydantic import BaseModel
-from .adapters import pycga_to_pydantic, pydantic_to_pycga
+from .adapters import pycga_to_pydantic, pydantic_to_pycga, SerializablePydanticModelWithPydanticFields
 
 
-class Answers(BaseModel):
+class Answers(SerializablePydanticModelWithPydanticFields):
     @classmethod
     def from_iterable(cls, iterable):
         raise NotImplementedError
