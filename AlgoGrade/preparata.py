@@ -1,7 +1,7 @@
 from __future__ import annotations
 from functools import partial
 from typing import ClassVar, Optional
-from PyCompGeomAlgorithms.core import ThreadedBinTree
+from PyCompGeomAlgorithms.core import PathDirection
 from PyCompGeomAlgorithms.preparata import preparata, PreparataNode, PreparataThreadedBinTree
 from .core import Task, Grader, Answers
 from .adapters import PointPydanticAdapter, ThreadedBinTreeNodePydanticAdapter, ThreadedBinTreePydanticAdapter
@@ -13,7 +13,8 @@ class PreparataGrader(Grader):
     def grade_methods(cls):
         return [
             cls.grade_iterable,
-            partial(cls.grade_iterable, grade_item_method=partial(cls.grade_iterable, grade_item_method=cls.grade_iterable)),
+            # ((left_paths, left_supporting_points), (right_paths, right_supporting_points)) -> paths is a list of lists of directions, supporting points is a list of points.
+            partial(cls.grade_iterable, grade_item_method=partial(cls.grade_iterable, grade_item_method=[partial(cls.grade_iterable, grade_item_method=cls.grade_iterable), cls.grade_iterable])),
             partial(cls.grade_iterable, grade_item_method=cls.grade_iterable),
             partial(cls.grade_iterable, grade_item_method=(cls.grade_iterable, partial(cls.grade_iterable, grade_item_method=cls.grade_bin_tree)))
         ]
@@ -42,24 +43,29 @@ class PreparataThreadedBinTreePydanticAdapter(ThreadedBinTreePydanticAdapter):
 class PreparataAnswers(Answers):
     hull: list[PointPydanticAdapter]
     tree: PreparataThreadedBinTreePydanticAdapter
-    left_paths: list[list[PointPydanticAdapter]]
-    right_paths: list[list[PointPydanticAdapter]]
+    left_paths: list[list[PathDirection]]
+    right_paths: list[list[PathDirection]]
+    left_supporting_points: list[PointPydanticAdapter]
+    right_supporting_points: list[PointPydanticAdapter]
     deleted_points_lists: list[list[PointPydanticAdapter]]
     hulls: list[list[PointPydanticAdapter]]
     trees: list[PreparataThreadedBinTreePydanticAdapter]
 
     @classmethod
     def from_iterable(cls, iterable):
-        (hull, tree), (left_paths, right_paths), deleted_points_lists, (hulls, trees), *rest = iterable
+        (hull, tree), ((left_paths, left_supporting_points), (right_paths, right_supporting_points)), deleted_points_lists, (hulls, trees), *rest = iterable
         return cls(
             hull=hull, tree=tree, left_paths=left_paths, right_paths=right_paths,
+            left_supporting_points=left_supporting_points, right_supporting_points=right_supporting_points,
             deleted_points_lists=deleted_points_lists, hulls=hulls, trees=trees
         )
     
     def to_pydantic_list(self):
         return [
-            (self.hull, self.tree), (self.left_paths, self.right_paths),
-            self.deleted_points_lists, (self.hulls, self.trees)
+            (self.hull, self.tree),
+            ((self.left_paths, self.left_supporting_points), (self.right_paths, self.right_supporting_points)),
+            self.deleted_points_lists,
+            (self.hulls, self.trees)
         ]
 
 

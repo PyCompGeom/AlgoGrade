@@ -1,6 +1,6 @@
 from math import isclose
 from copy import deepcopy
-from PyCompGeomAlgorithms.core import Point
+from PyCompGeomAlgorithms.core import Point, PathDirection
 from PyCompGeomAlgorithms.preparata import PreparataThreadedBinTree
 from AlgoGrade.preparata import PreparataGrader, PreparataTask, PreparataAnswers
 from AlgoGrade.adapters import pycga_to_pydantic
@@ -26,14 +26,24 @@ def test_preparata_all_correct():
     hull = [Point(1, 1), Point(1, 11), Point(10, 1)]
     tree0 = PreparataThreadedBinTree.from_iterable(hull0)
     left_paths = [
-        [Point(1, 5), Point(5, 3)],
-        [Point(1, 11), Point(5, 3), Point(1, 1)],
-        [Point(1, 11), Point(6, 1), Point(1, 1)]
+        [PathDirection.right],
+        [PathDirection.right, PathDirection.right],
+        [PathDirection.right, PathDirection.right]
     ]
     right_paths = [
-        [Point(1, 5), Point(1, 1)],
-        [Point(1, 11)],
-        [Point(1, 11)]
+        [PathDirection.left],
+        [],
+        []
+    ]
+    left_supporting_points = [
+        Point(5, 3),
+        Point(1, 1),
+        Point(1, 1)
+    ]
+    right_supporting_points = [
+        Point(1, 1),
+        Point(1, 11),
+        Point(1, 11)
     ]
     deleted_points = [[Point(1, 5)], [Point(5, 3)], [Point(6, 1)]]
     hulls = [
@@ -43,7 +53,7 @@ def test_preparata_all_correct():
     ]
     trees = [PreparataThreadedBinTree.from_iterable(hulls[0]), PreparataThreadedBinTree.from_iterable(hulls[1])]
 
-    pycga_answers = [(hull0, tree0), (left_paths, right_paths), deleted_points, (hulls, trees)]
+    pycga_answers = [(hull0, tree0), ((left_paths, left_supporting_points), (right_paths, right_supporting_points)), deleted_points, (hulls, trees)]
     pydantic_answers = pycga_to_pydantic(pycga_answers)
     answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
 
@@ -98,8 +108,8 @@ def test_preparata_grader_incorrect_first_tree():
 def test_preparata_grader_incorrect_left_paths_single():
     pycga_answers = deepcopy(correct_pycga_answers)
     
-    left_paths = pycga_answers[1][0]
-    left_paths[0][0] = Point(100, 100)
+    left_paths = pycga_answers[1][0][0]
+    left_paths[0][0] = PathDirection.left
 
     pydantic_answers = pycga_to_pydantic(pycga_answers)
     answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
@@ -117,9 +127,9 @@ def test_preparata_grader_incorrect_left_paths_single():
 def test_preparata_grader_incorrect_left_paths_repeated():
     pycga_answers = deepcopy(correct_pycga_answers)
     
-    left_paths = pycga_answers[1][0]
-    left_paths[0][0] = Point(100, 100)
-    left_paths[0][1] = Point(100, 100)
+    left_paths = pycga_answers[1][0][0]
+    left_paths[1][0] = PathDirection.left
+    left_paths[1][1] = PathDirection.left
 
     pydantic_answers = pycga_to_pydantic(pycga_answers)
     answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
@@ -137,8 +147,8 @@ def test_preparata_grader_incorrect_left_paths_repeated():
 def test_preparata_grader_incorrect_right_paths_single():
     pycga_answers = deepcopy(correct_pycga_answers)
     
-    right_paths = pycga_answers[1][1]
-    right_paths[0][0] = Point(100, 100)
+    right_paths = pycga_answers[1][1][0]
+    right_paths[0][0] = PathDirection.right
 
     pydantic_answers = pycga_to_pydantic(pycga_answers)
     answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
@@ -156,9 +166,9 @@ def test_preparata_grader_incorrect_right_paths_single():
 def test_preparata_grader_incorrect_right_paths_repeated():
     pycga_answers = deepcopy(correct_pycga_answers)
     
-    right_paths = pycga_answers[1][1]
-    right_paths[0][0] = Point(100, 100)
-    right_paths[0][1] = Point(100, 100)
+    right_paths = pycga_answers[1][1][0]
+    right_paths[0][0] = PathDirection.right
+    right_paths[1].append(PathDirection.right)
 
     pydantic_answers = pycga_to_pydantic(pycga_answers)
     answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
@@ -176,10 +186,191 @@ def test_preparata_grader_incorrect_right_paths_repeated():
 def test_preparata_grader_incorrect_left_and_right_paths():
     pycga_answers = deepcopy(correct_pycga_answers)
     
-    left_paths = pycga_answers[1][0]
-    right_paths = pycga_answers[1][1]
-    left_paths[0][0] = Point(100, 100)
-    right_paths[0][0] = Point(100, 100)
+    left_paths = pycga_answers[1][0][0]
+    right_paths = pycga_answers[1][1][0]
+    left_paths[0][0] = PathDirection.left
+    right_paths[0][0] = PathDirection.right
+
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
+    assert isclose(total_grade, -0.5)
+
+
+def test_preparata_grader_incorrect_left_supporting_points_single():
+    pycga_answers = deepcopy(correct_pycga_answers)
+    
+    left_supporting_points = pycga_answers[1][0][1]
+    left_supporting_points[0] = Point(100, 100)
+
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    assert isclose(total_grade, 0.75)
+
+    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, 0.75)
+
+    total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
+    assert isclose(total_grade, 0.75)
+
+
+def test_preparata_grader_incorrect_left_supporting_points_repeated():
+    pycga_answers = deepcopy(correct_pycga_answers)
+    
+    left_supporting_points = pycga_answers[1][0][1]
+    left_supporting_points[0] = Point(100, 100)
+    left_supporting_points[1] = Point(100, 100)
+
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
+    assert isclose(total_grade, -0.5)
+
+
+def test_preparata_grader_incorrect_right_supporting_points_single():
+    pycga_answers = deepcopy(correct_pycga_answers)
+    
+    right_supporting_points = pycga_answers[1][1][1]
+    right_supporting_points[0] = Point(100, 100)
+
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    assert isclose(total_grade, 0.75)
+
+    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, 0.75)
+
+    total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
+    assert isclose(total_grade, 0.75)
+
+
+def test_preparata_grader_incorrect_right_supporting_points_repeated():
+    pycga_answers = deepcopy(correct_pycga_answers)
+    
+    right_supporting_points = pycga_answers[1][1][1]
+    right_supporting_points[0] = Point(100, 100)
+    right_supporting_points[1] = Point(100, 100)
+
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
+    assert isclose(total_grade, -0.5)
+
+
+def test_preparata_grader_incorrect_left_and_right_supporting_points():
+    pycga_answers = deepcopy(correct_pycga_answers)
+    
+    left_supporting_points = pycga_answers[1][0][1]
+    right_supporting_points = pycga_answers[1][1][1]
+    left_supporting_points[0] = Point(100, 100)
+    right_supporting_points[0] = Point(100, 100)
+
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
+    assert isclose(total_grade, -0.5)
+
+
+def test_preparata_grader_incorrect_left_paths_and_left_supporting_points():
+    pycga_answers = deepcopy(correct_pycga_answers)
+    
+    left_paths, left_supporting_points = pycga_answers[1][0]
+    left_paths[0][0] = PathDirection.left
+    left_supporting_points[0] = Point(100, 100)
+
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
+    assert isclose(total_grade, -0.5)
+
+
+def test_preparata_grader_incorrect_left_paths_and_right_supporting_points():
+    pycga_answers = deepcopy(correct_pycga_answers)
+    
+    left_paths = pycga_answers[1][0][0]
+    right_supporting_points = pycga_answers[1][1][1]
+    left_paths[0][0] = PathDirection.left
+    right_supporting_points[0] = Point(100, 100)
+
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
+    assert isclose(total_grade, -0.5)
+
+
+def test_preparata_grader_incorrect_right_paths_and_left_supporting_points():
+    pycga_answers = deepcopy(correct_pycga_answers)
+    
+    right_paths = pycga_answers[1][1][0]
+    left_supporting_points = pycga_answers[1][0][1]
+    right_paths[0][0] = PathDirection.right
+    left_supporting_points[0] = Point(100, 100)
+
+    pydantic_answers = pycga_to_pydantic(pycga_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+
+    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    assert isclose(total_grade, -0.5)
+
+    total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
+    assert isclose(total_grade, -0.5)
+
+
+def test_preparata_grader_incorrect_right_paths_and_right_supporting_points():
+    pycga_answers = deepcopy(correct_pycga_answers)
+    
+    right_paths, right_supporting_points = pycga_answers[1][1]
+    right_paths[0][0] = PathDirection.right
+    right_supporting_points[0] = Point(100, 100)
 
     pydantic_answers = pycga_to_pydantic(pycga_answers)
     answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)

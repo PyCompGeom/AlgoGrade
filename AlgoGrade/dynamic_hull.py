@@ -1,8 +1,8 @@
 from __future__ import annotations
 from functools import partial
 from typing import ClassVar, Optional, Union
-from PyCompGeomAlgorithms.core import BinTree, BinTreeNode, ThreadedBinTree, ThreadedBinTreeNode
-from PyCompGeomAlgorithms.dynamic_hull import upper_dynamic_hull, DynamicHullNode, DynamicHullTree, SubhullNode, SubhullThreadedBinTree, PathDirection
+from PyCompGeomAlgorithms.core import PathDirection
+from PyCompGeomAlgorithms.dynamic_hull import upper_dynamic_hull, DynamicHullNode, DynamicHullTree, SubhullNode, SubhullThreadedBinTree
 from .adapters import pycga_to_pydantic, pydantic_to_pycga, PointPydanticAdapter, BinTreeNodePydanticAdapter, BinTreePydanticAdapter, ThreadedBinTreeNodePydanticAdapter, ThreadedBinTreePydanticAdapter
 from .core import Task, Grader, Answers, Mistake
 from .parsers import PointListAndTargetPointGivenJSONParser
