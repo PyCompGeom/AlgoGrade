@@ -12,11 +12,11 @@ class PreparataGrader(Grader):
     @classmethod
     def grade_methods(cls):
         return [
-            cls.grade_iterable,
+            partial(cls.grade_iterable, grade_item_method=[cls.grade_iterable, cls.grade_bin_tree]),
             # ((left_paths, left_supporting_points), (right_paths, right_supporting_points)) -> paths is a list of lists of directions, supporting points is a list of points.
             partial(cls.grade_iterable, grade_item_method=partial(cls.grade_iterable, grade_item_method=[partial(cls.grade_iterable, grade_item_method=cls.grade_iterable), cls.grade_iterable])),
             partial(cls.grade_iterable, grade_item_method=cls.grade_iterable),
-            partial(cls.grade_iterable, grade_item_method=(cls.grade_iterable, partial(cls.grade_iterable, grade_item_method=cls.grade_bin_tree)))
+            partial(cls.grade_iterable, grade_item_method=[cls.grade_iterable, partial(cls.grade_iterable, grade_item_method=cls.grade_bin_tree)])
         ]
 
 
