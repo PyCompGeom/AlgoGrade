@@ -7,8 +7,8 @@ class MockGrader(Grader):
     @classmethod
     def grade_methods(cls):
         return [
-            cls.grade_default,
-            cls.grade_default,
+            cls.grade_object,
+            cls.grade_object,
             cls.grade_iterable   
         ]
 

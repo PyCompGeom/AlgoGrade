@@ -3,7 +3,7 @@ from typing import Any, ClassVar, Optional, Iterable, Generator, Union
 from enum import Enum
 from copy import deepcopy
 from typing_extensions import Literal
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 from PyCompGeomAlgorithms.core import PyCGAObject, Point, BinTreeNode, BinTree, ThreadedBinTreeNode, ThreadedBinTree
 from PyCompGeomAlgorithms.dynamic_hull import DynamicHullNode, DynamicHullTree, SubhullNode, SubhullThreadedBinTree
 from PyCompGeomAlgorithms.graham import GrahamStepsTableRow, GrahamStepsTable
@@ -134,49 +134,33 @@ class BinTreePydanticAdapter(PydanticAdapter):
         return self.root.traverse_inorder() if self.root else []
 
 
-def serialize_threaded_bin_tree_root_or_tree(root_or_tree: ThreadedBinTreeNodePydanticAdapter | ThreadedBinTreePydanticAdapter, *args, **kwargs):
+def serialize_threaded_bin_tree_or_its_root(root_or_tree: ThreadedBinTreeNodePydanticAdapter | ThreadedBinTreePydanticAdapter, *args, **kwargs):
     """
         Serializes both a threaded bin tree or its root.
     """
     copy = deepcopy(root_or_tree)
     nodes_inorder = copy.traverse_inorder() if isinstance(copy, ThreadedBinTreeNodePydanticAdapter) else copy.root.traverse_inorder()
-    is_circular = nodes_inorder and nodes_inorder[0].prev is nodes_inorder[-1]
-
-    # Store node positions in inorder traversal instead of nodes to avoid infinite loops and be able to convert the tree to JSON
-    for i, node in enumerate(nodes_inorder):
-        node.prev = (i - 1) % len(nodes_inorder)
-        node.next = (i + 1) % len(nodes_inorder)
     
-    if not is_circular and nodes_inorder:
-        nodes_inorder[0].prev = None
-        nodes_inorder[-1].next = None
+    for i, node in enumerate(nodes_inorder):
+        node.inorder_index = i
+    
+    for i, node in enumerate(nodes_inorder):
+        node.prev = node.prev.inorder_index if node.prev is not None else node.prev
+        node.next = node.next.inorder_index if node.next is not None else node.next
 
     return copy.model_dump(*args, **(kwargs | {'can_serialize': True}))
 
 
-def deserialize_threaded_bin_tree_root(root):
+def deserialize_threaded_bin_tree_root(root: ThreadedBinTreeNodePydanticAdapter):
     nodes_inorder = root.traverse_inorder()
-    is_circular = (
-        nodes_inorder
-        and nodes_inorder[0].prev is not None
-        and nodes_inorder[-1].next is not None
-        and (
-            (nodes_inorder[-1].next == 0)                     # if the object comes from JSON, this checks the node indices (see serialize_threaded_bin_tree_root)
-            if isinstance(nodes_inorder[0].prev, int)
-            else (nodes_inorder[0].prev is nodes_inorder[-1]) # if the object comes from Python objects, this checks the nodes 
-        )
-    )
 
-    for i, node in enumerate(nodes_inorder):
-        node.prev = nodes_inorder[i-1]
-        node.next = nodes_inorder[(i + 1) % len(nodes_inorder)]
-    
-    if not is_circular and nodes_inorder:
-        nodes_inorder[0].prev = None
-        nodes_inorder[-1].next = None
+    for node in nodes_inorder:
+        node.prev = nodes_inorder[int(node.prev)] if node.prev is not None else node.prev
+        node.next = nodes_inorder[int(node.next)] if node.next is not None else node.next
 
 
-class ThreadedBinTreeNodePydanticAdapter(BinTreeNodePydanticAdapter):
+# Extra.allow set to allow adding attributes dynamically (see serialize_threaded_bin_tree_or_its_root)
+class ThreadedBinTreeNodePydanticAdapter(BinTreeNodePydanticAdapter, extra=Extra.allow):
     regular_class: ClassVar[type] = ThreadedBinTreeNode
     left: Optional[ThreadedBinTreeNodePydanticAdapter] = None
     right: Optional[ThreadedBinTreeNodePydanticAdapter] = None
@@ -185,14 +169,13 @@ class ThreadedBinTreeNodePydanticAdapter(BinTreeNodePydanticAdapter):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        deserialize_threaded_bin_tree_root(self)  
     
     def model_dump(self, *args, **kwargs):
         if kwargs.get('can_serialize', False):
             kwargs.pop('can_serialize')
             return BaseModel.model_dump(self, *args, **kwargs)
         
-        return serialize_threaded_bin_tree_root_or_tree(self, *args, **kwargs)
+        return serialize_threaded_bin_tree_or_its_root(self, *args, **kwargs)
 
     def regular_object(self):
         return self.regular_class(
@@ -212,14 +195,16 @@ class ThreadedBinTreePydanticAdapter(BinTreePydanticAdapter):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        deserialize_threaded_bin_tree_root(self.root)
+        
+        if self.root and (isinstance(self.root.prev, int) or isinstance(self.root.next, int)):
+            deserialize_threaded_bin_tree_root(self.root)
 
     def model_dump(self, *args, **kwargs):
         if kwargs.get('can_serialize', False):
             kwargs.pop('can_serialize')
             return BaseModel.model_dump(self, *args, **kwargs)
         
-        return serialize_threaded_bin_tree_root_or_tree(self, *args, **kwargs)
+        return serialize_threaded_bin_tree_or_its_root(self, *args, **kwargs)
 
     @classmethod
     def from_regular_object(cls, obj: ThreadedBinTree, **kwargs):

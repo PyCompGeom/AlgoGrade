@@ -32,7 +32,7 @@ class DynamicHullGrader(Grader):
             ),
             partial(
                 cls.grade_bin_tree,
-                grade_item_method=lambda a, c, gp: cls.grade_default(a.point, c.point, gp)
+                grade_item_method=lambda a, c, gp: cls.grade_object(a.point, c.point, gp)
             ),
             partial(
                 cls.grade_bin_tree,

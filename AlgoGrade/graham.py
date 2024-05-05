@@ -9,9 +9,9 @@ class GrahamGrader(Grader):
     @classmethod
     def grade_methods(cls):
         return [
-            cls.grade_default,
+            cls.grade_object,
             cls.grade_iterable,
-            cls.grade_default,
+            cls.grade_object,
             cls.grade_iterable,
             cls.grade_iterable,
             cls.grade_angles_less_than_pi,
