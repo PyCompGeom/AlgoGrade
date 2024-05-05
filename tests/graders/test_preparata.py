@@ -467,7 +467,7 @@ def test_preparata_grader_incorrect_trees_single():
     pycga_answers = deepcopy(correct_pycga_answers)
     
     trees = pycga_answers[3][1]
-    trees[0].root.data = Point(100, 100)
+    trees[0].root.left.data = Point(100, 100)
 
     pydantic_answers = pycga_to_pydantic(pycga_answers)
     answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)

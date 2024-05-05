@@ -1,4 +1,6 @@
 from collections import Counter
+from functools import partial
+from operator import eq
 from typing import Iterable, Callable, Type, Any
 from pydantic import BaseModel
 from .adapters import pycga_to_pydantic, pydantic_to_pycga, SerializablePydanticModelWithPydanticFields
@@ -90,13 +92,20 @@ class Grader:
         return cls.grade_pydantic(answers.to_pydantic_list(), correct_answers.to_pydantic_list(), scorings)
     
     @classmethod
-    def grade_default(cls, answer, correct_answer, scorings, item_mistake_text=""):
-        return [] if answer == correct_answer else [Mistake(scorings, description=item_mistake_text)]
-    
+    def grade_object(cls, answer, correct_answer, scorings, item_mistake_text="", custom_eq=eq):
+        """
+            The most basic method for grading an object compared to the correct one, using customizable equality.
+            
+            By default, grades `answer` compared to `correct_answer` based on whether `answer == correct_answer` (`answer.__eq__(correct_answer)`).
+
+            Returns an empty list if the equality holds, and a list containing a mistake otherwise.
+        """
+        return [] if custom_eq(answer, correct_answer) else [Mistake(scorings, description=item_mistake_text)]
+
     @classmethod
     def grade_iterable(cls, answer, correct_answer, scorings, grade_item_method=None, item_mistake_text=""):
         if grade_item_method is None:
-            grade_item_method = cls.grade_default
+            grade_item_method = cls.grade_object
         if callable(grade_item_method):
             grade_item_method = [grade_item_method] * len(correct_answer)
         elif not isinstance(grade_item_method, Iterable):
@@ -114,14 +123,14 @@ class Grader:
     @classmethod
     def grade_bin_tree(cls, answer, correct_answer, scorings, grade_item_method=None, item_mistake_text=""):
         if grade_item_method is None:
-            grade_item_method = cls.grade_default
+            grade_item_method = partial(cls.grade_object, custom_eq=lambda a, c: c.weak_equal(a))
         
         return cls._find_mistakes_in_bin_tree(answer.root, correct_answer.root, scorings, grade_item_method, item_mistake_text)
 
     @classmethod
     def _find_mistakes_in_bin_tree(
         cls, node, correct_node, scorings,
-        grade_item_method=None, item_mistake_text="", mistakes=None, extra=None, missing=None
+        grade_item_method=None, item_mistake_text="", mistakes=None, extra=None, missing=None, matching_nodes=None
     ):
         if mistakes is None:
             mistakes = []
@@ -129,9 +138,12 @@ class Grader:
             extra = []
         if missing is None:
             missing = []
+        if matching_nodes is None:
+            matching_nodes = []
         
         mistakes.extend(grade_item_method(node, correct_node, scorings))
-        
+        matching_nodes.append((node, correct_node))
+
         if node.left and correct_node.left:
             cls._find_mistakes_in_bin_tree(node.left, correct_node.left, scorings, grade_item_method, item_mistake_text, mistakes, extra, missing)
         if node.left and not correct_node.left:
