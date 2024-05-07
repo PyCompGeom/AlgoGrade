@@ -154,8 +154,11 @@ def serialize_threaded_bin_tree_or_its_root(root_or_tree: ThreadedBinTreeNodePyd
 def deserialize_threaded_bin_tree_root(root: ThreadedBinTreeNodePydanticAdapter):
     nodes_inorder = root.traverse_inorder()
 
-    for node in nodes_inorder:
+    for i, node in enumerate(nodes_inorder):
+        node.inorder_index = i
+        node.prev_index = int(node.prev) if node.prev is not None else node.prev
         node.prev = nodes_inorder[int(node.prev)] if node.prev is not None else node.prev
+        node.next_index = int(node.next) if node.next is not None else node.next
         node.next = nodes_inorder[int(node.next)] if node.next is not None else node.next
 
 
