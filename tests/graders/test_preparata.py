@@ -526,3 +526,395 @@ def test_preparata_grader_incorrect_trees_and_hulls():
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
     assert isclose(total_grade, -0.5)
+
+
+def test_preparata_grader_jsons_correct_answers():
+    answers = PreparataAnswers(**{
+        "tree": {
+            "root": {
+                "data": {
+                    "coords": [
+                        3,
+                        3
+                    ]
+                },
+                "left": {
+                    "data": {
+                        "coords": [
+                            0,
+                            0
+                        ]
+                    },
+                    "next": 1,
+                    "prev": 2
+                },
+                "right": {
+                    "data": {
+                        "coords": [
+                            7,
+                            0
+                        ]
+                    },
+                    "prev": 1,
+                    "next": 0
+                },
+                "prev": 0,
+                "next": 2
+            }
+        },
+        "hull": [
+            {
+                "coords": [
+                    0,
+                    0
+                ]
+            },
+            {
+                "coords": [
+                    3,
+                    3
+                ]
+            },
+            {
+                "coords": [
+                    7,
+                    0
+                ]
+            }
+        ],
+        "trees": [
+            {
+                "root": {
+                    "data": {
+                        "coords": [
+                            7,
+                            9
+                        ]
+                    },
+                    "left": {
+                        "data": {
+                            "coords": [
+                                0,
+                                0
+                            ]
+                        },
+                        "next": 1,
+                        "prev": 2
+                    },
+                    "right": {
+                        "data": {
+                            "coords": [
+                                7,
+                                0
+                            ]
+                        },
+                        "prev": 1,
+                        "next": 0
+                    },
+                    "prev": 0,
+                    "next": 2
+                }
+            }
+        ],
+        "hulls": [
+            [
+                {
+                    "coords": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "coords": [
+                        7,
+                        9
+                    ]
+                },
+                {
+                    "coords": [
+                        7,
+                        0
+                    ]
+                }
+            ],
+            [
+                {
+                    "coords": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "coords": [
+                        7,
+                        9
+                    ]
+                },
+                {
+                    "coords": [
+                        10,
+                        8
+                    ]
+                },
+                {
+                    "coords": [
+                        7,
+                        0
+                    ]
+                }
+            ]
+        ],
+        "left_paths": [
+            [
+                "right"
+            ],
+            [
+                "right"
+            ]
+        ],
+        "right_paths": [
+            [
+                "left"
+            ],
+            []
+        ],
+        "left_supporting_points": [
+            {
+                "coords": [
+                    7,
+                    0
+                ]
+            },
+            {
+                "coords": [
+                    7,
+                    0
+                ]
+            }
+        ],
+        "right_supporting_points": [
+            {
+                "coords": [
+                    0,
+                    0
+                ]
+            },
+            {
+                "coords": [
+                    7,
+                    9
+                ]
+            }
+        ],
+        "deleted_points_lists": [
+            [
+                {
+                    "coords": [
+                        3,
+                        3
+                    ]
+                }
+            ],
+            []
+        ]
+    })
+    correct_answers = PreparataAnswers(**{
+        "hull": [
+            {
+                "coords": [
+                    0,
+                    0
+                ]
+            },
+            {
+                "coords": [
+                    3,
+                    3
+                ]
+            },
+            {
+                "coords": [
+                    7,
+                    0
+                ]
+            }
+        ],
+        "tree": {
+            "root": {
+                "data": {
+                    "coords": [
+                        3,
+                        3
+                    ]
+                },
+                "left": {
+                    "data": {
+                        "coords": [
+                            0,
+                            0
+                        ]
+                    },
+                    "left": None,
+                    "right": None,
+                    "prev": 2,
+                    "next": 1
+                },
+                "right": {
+                    "data": {
+                        "coords": [
+                            7,
+                            0
+                        ]
+                    },
+                    "left": None,
+                    "right": None,
+                    "prev": 1,
+                    "next": 0
+                },
+                "prev": 0,
+                "next": 2
+            }
+        },
+        "left_paths": [
+            [
+                "right"
+            ],
+            [
+                "right"
+            ]
+        ],
+        "right_paths": [
+            [
+                "left"
+            ],
+            []
+        ],
+        "left_supporting_points": [
+            {
+                "coords": [
+                    7,
+                    0
+                ]
+            },
+            {
+                "coords": [
+                    7,
+                    0
+                ]
+            }
+        ],
+        "right_supporting_points": [
+            {
+                "coords": [
+                    0,
+                    0
+                ]
+            },
+            {
+                "coords": [
+                    7,
+                    9
+                ]
+            }
+        ],
+        "deleted_points_lists": [
+            [
+                {
+                    "coords": [
+                        3,
+                        3
+                    ]
+                }
+            ],
+            []
+        ],
+        "hulls": [
+            [
+                {
+                    "coords": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "coords": [
+                        7,
+                        9
+                    ]
+                },
+                {
+                    "coords": [
+                        7,
+                        0
+                    ]
+                }
+            ],
+            [
+                {
+                    "coords": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "coords": [
+                        7,
+                        9
+                    ]
+                },
+                {
+                    "coords": [
+                        10,
+                        8
+                    ]
+                },
+                {
+                    "coords": [
+                        7,
+                        0
+                    ]
+                }
+            ]
+        ],
+        "trees": [
+            {
+                "root": {
+                    "data": {
+                        "coords": [
+                            7,
+                            9
+                        ]
+                    },
+                    "left": {
+                        "data": {
+                            "coords": [
+                                0,
+                                0
+                            ]
+                        },
+                        "left": None,
+                        "right": None,
+                        "prev": 2,
+                        "next": 1
+                    },
+                    "right": {
+                        "data": {
+                            "coords": [
+                                7,
+                                0
+                            ]
+                        },
+                        "left": None,
+                        "right": None,
+                        "prev": 1,
+                        "next": 0
+                    },
+                    "prev": 0,
+                    "next": 2
+                }
+            }
+        ]
+    })
+
+    score, _ = PreparataGrader.grade_answers_wrapper(answers, correct_answers, scorings)
+    assert isclose(score, 1.0)
