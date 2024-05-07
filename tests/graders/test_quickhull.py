@@ -178,13 +178,13 @@ def test_quickhull_grader_incorrect_finalization():
     answers_wrapper = QuickhullAnswers.from_iterable(pydantic_answers)
 
     total_grade, answer_grades = QuickhullGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
-    assert isclose(total_grade, 1.75)
+    assert isclose(total_grade, 0.25) # this test also triggers four node-related gradings: 0.25, 0.25, 0.25, 1
 
     total_grade, answer_grades = QuickhullGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
-    assert isclose(total_grade, 1.75)
+    assert isclose(total_grade, 0.25)
 
     total_grade, answer_grades = QuickhullGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
-    assert isclose(total_grade, 1.75)
+    assert isclose(total_grade, 0.25)
 
 
 def test_quickhull_grader_incorrect_merge():
