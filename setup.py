@@ -3,11 +3,11 @@ from setuptools import setup, find_packages
 
 setup(
     name="AlgoGrade",
-    version="1.0.15",
+    version="1.0.16",
     author="artandfi (Artem Fisunenko)",
     author_email="artyom.fisunenko@gmail.com",
     description="A library for automated grading of algorithmic tasks with grading of their intermediate stages. "
-    "The grading of some computational geometry tasks are provided out of the box.",
+    "The grading of some computational geometry tasks is provided out of the box.",
     packages=find_packages(),
     install_requires=[line.strip() for line in open("requirements.txt", "r").readlines()],
     keywords=[
