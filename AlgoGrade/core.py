@@ -46,6 +46,11 @@ class Scoring(BaseModel, frozen=True):
 
 class Grader:
     @classmethod
+    def grade_methods(cls):
+        """List of grading methods for each step of the task. Redefine in the derived class"""
+        raise NotImplementedError
+
+    @classmethod
     def grade_pycga(cls, answers, correct_answers, scorings):
         """
             Compare answers to correct_answers (both in PyCGA format) an return a tuple
@@ -130,39 +135,161 @@ class Grader:
     @classmethod
     def _find_mistakes_in_bin_tree(
         cls, node, correct_node, scorings,
-        grade_item_method=None, item_mistake_text="", mistakes=None, extra=None, missing=None, matching_nodes=None
+        grade_item_method=None, item_mistake_text="", mistakes=None, mistakes_extra=None, mistakes_missing=None
     ):
         if mistakes is None:
             mistakes = []
-        if extra is None:
-            extra = []
-        if missing is None:
-            missing = []
-        if matching_nodes is None:
-            matching_nodes = []
+        if mistakes_extra is None:
+            mistakes_extra = []
+        if mistakes_missing is None:
+            mistakes_missing = []
         
         mistakes.extend(grade_item_method(node, correct_node, scorings))
-        matching_nodes.append((node, correct_node))
 
-        if node.left and correct_node.left:
-            cls._find_mistakes_in_bin_tree(node.left, correct_node.left, scorings, grade_item_method, item_mistake_text, mistakes, extra, missing)
-        if node.left and not correct_node.left:
-            extra.extend(Mistake(scorings, "Extra item") for _ in node.left.traverse_preorder()[1:])
-        if not node.left and correct_node.left:
-            missing.extend(Mistake(scorings, "Missing item") for _ in correct_node.left.traverse_preorder()[1:])
+        cls._find_mistakes_in_subtree(node.left, correct_node.left, scorings, grade_item_method, item_mistake_text, mistakes, mistakes_extra, mistakes_missing)
+        cls._find_mistakes_in_subtree(node.right, correct_node.right, scorings, grade_item_method, item_mistake_text, mistakes, mistakes_extra, mistakes_missing)
 
-        if node.right and correct_node.right:
-            cls._find_mistakes_in_bin_tree(node.right, correct_node.right, scorings, grade_item_method, item_mistake_text, mistakes, extra, missing)
-        if node.right and not correct_node.right:
-            extra.extend(Mistake(scorings, "Extra item") for _ in node.right.traverse_preorder()[1:])
-        if not node.right and correct_node.right:
-            missing.extend(Mistake(scorings, "Missing item") for _ in correct_node.right.traverse_preorder()[1:])
-        
-        return mistakes + extra + missing
+        return mistakes + mistakes_extra + mistakes_missing
 
     @classmethod
-    def grade_methods(cls):
-        raise NotImplementedError
+    def _find_mistakes_in_subtree(cls, node, correct_node, scorings, grade_item_method, item_mistake_text, mistakes, extra, missing):
+        if node and correct_node:
+            cls._find_mistakes_in_bin_tree(node, correct_node, scorings, grade_item_method, item_mistake_text, mistakes, extra, missing)
+        if node and not correct_node:
+            extra.extend(Mistake(scorings, "Extra item") for _ in node.traverse_inorder())
+        if not node and correct_node:
+            missing.extend(Mistake(scorings, "Missing item") for _ in correct_node.traverse_inorder())
+
+    @classmethod
+    def grade_threaded_bin_tree(cls, answer, correct_answer, scorings, grade_item_method=None, item_mistake_text=""):
+        if grade_item_method is None:
+            grade_item_method = partial(cls.grade_object, custom_eq=lambda a, c: c.weak_equal(a))
+
+        nodes = answer.traverse_inorder()
+        correct_nodes = correct_answer.traverse_inorder()
+
+        cls._set_nodes_indices(nodes)
+        cls._set_nodes_indices(correct_nodes)
+        
+        matching_nodes, correct_matching_nodes = [], []
+        seen_threads = set()
+        mistakes = cls._find_mistakes_in_threaded_bin_tree(
+            node=answer.root, correct_node=correct_answer.root, scorings=scorings, grade_item_method=grade_item_method, item_mistake_text=item_mistake_text,
+            matching_nodes=matching_nodes, correct_matching_nodes=correct_matching_nodes, seen_threads=seen_threads
+        )
+
+        for node, correct_node in zip(matching_nodes, correct_matching_nodes):
+            mistakes.extend(cls._find_thread_mistakes_in_correct_subtree(node, node.prev, correct_node.prev, seen_threads, scorings))
+            mistakes.extend(cls._find_thread_mistakes_in_correct_subtree(node, node.next, correct_node.next, seen_threads, scorings))
+        
+        return mistakes
+
+    @classmethod
+    def _set_nodes_indices(cls, nodes):
+        for i, node in enumerate(nodes):
+                node.matching_node_index = None
+                node.inorder_index = i
+        for node in nodes:
+            if node.prev is not None:
+                node.prev_index = node.prev.inorder_index
+            else:
+                node.prev_index = None
+            if node.next is not None:
+                node.next_index = node.next.inorder_index
+            else:
+                node.next_index = None
+
+    @classmethod
+    def _find_mistakes_in_threaded_bin_tree(
+        cls, node, correct_node, scorings,
+        grade_item_method=None, item_mistake_text="", mistakes=None, mistakes_extra=None, mistakes_missing=None,
+        matching_nodes_counter=None, matching_nodes=None, correct_matching_nodes=None, seen_threads=None
+    ):
+        if mistakes is None:
+            mistakes = []
+        if mistakes_extra is None:
+            mistakes_extra = []
+        if mistakes_missing is None:
+            mistakes_missing = []
+        if matching_nodes_counter is None:
+            matching_nodes_counter = [0]
+        if matching_nodes is None:
+            matching_nodes = []
+        if correct_matching_nodes is None:
+            correct_matching_nodes = []
+        if seen_threads is None:
+            seen_threads = set()
+
+        mistakes.extend(grade_item_method(node, correct_node, scorings))
+        
+        matching_nodes_counter[0] += 1
+        node.matching_node_index = matching_nodes_counter[0]
+        correct_node.matching_node_index = matching_nodes_counter[0]
+        
+        matching_nodes.append(node)
+        correct_matching_nodes.append(correct_node)
+
+        cls._find_mistakes_in_threaded_subtree(node.left, correct_node.left, scorings, grade_item_method, item_mistake_text, mistakes, mistakes_extra, mistakes_missing, matching_nodes_counter, matching_nodes, correct_matching_nodes, seen_threads)
+        cls._find_mistakes_in_threaded_subtree(node.right, correct_node.right, scorings, grade_item_method, item_mistake_text, mistakes, mistakes_extra, mistakes_missing, matching_nodes_counter, matching_nodes, correct_matching_nodes, seen_threads)
+        
+        return mistakes + mistakes_extra + mistakes_missing
+
+    @classmethod
+    def _find_mistakes_in_threaded_subtree(cls, subtree_root, correct_subtree_root, scorings, grade_item_method, item_mistake_text, mistakes, mistakes_extra, mistakes_missing, matching_nodes_counter, matching_nodes, correct_matching_nodes, seen_threads):
+        if subtree_root and correct_subtree_root:
+            cls._find_mistakes_in_threaded_bin_tree(subtree_root, correct_subtree_root, scorings, grade_item_method, item_mistake_text, mistakes, mistakes_extra, mistakes_missing, matching_nodes_counter, matching_nodes, correct_matching_nodes, seen_threads)
+        if subtree_root and not correct_subtree_root:
+            extra_nodes = subtree_root.traverse_inorder()
+            mistakes_extra.extend(Mistake(scorings, "Extra node") for _ in extra_nodes)            
+            
+            # Here threads can be set by student in an unpredictably wrong way, so we need to traverse them all to find their number
+            connected_threads = cls._connected_threads(extra_nodes)
+            mistakes_extra.extend(Mistake(scorings, "Extra thread") for _ in connected_threads)
+            seen_threads |= connected_threads
+        if not subtree_root and correct_subtree_root:
+            missing_nodes = correct_subtree_root.traverse_inorder()
+            mistakes_missing.extend(Mistake(scorings, "Missing node") for _ in missing_nodes)
+
+            # Here the number of threads can be found without traversing.
+            # If len(missing_nodes) is N > 0, then there is necessarily 1 thread between the parent of correct_subtree_root and the left/right extreme node of its (parent's) right/left subtree, respectively.
+            # There are also N - 1 threads between N nodes in the subtree.
+            # For circular TBT, there is 1 additional thread from that subtree's extreme node to either correct_node's parent or, if the extreme node is also globally extreme, to the other globally extreme node.
+            # For non-circular TBT, there is no thread between globally leftmost node and globally rightmost node.
+            n_missing_threads = len(missing_nodes) + (0 if missing_nodes[0].prev is None else 1)
+            mistakes_missing.extend(Mistake(scorings, "Missing thread") for _ in range(n_missing_threads))
+
+    @classmethod
+    def _connected_threads(cls, nodes):
+        seen_threads = set()
+        for node in nodes:
+            if node.prev_index is not None:
+                seen_threads.add((node.prev_index, node.inorder_index))
+            if node.next_index is not None:
+                seen_threads.add((node.inorder_index, node.next_index))
+        
+        return seen_threads
+
+    @classmethod
+    def _find_thread_mistakes_in_correct_subtree(cls, node, neighbor, correct_neighbor, seen_threads, scorings):
+        mistakes = []
+        if neighbor is None and correct_neighbor is not None:
+            mistakes.append(Mistake(scorings, "Missing thread"))
+        elif neighbor is not None and (neighbor.inorder_index, node.inorder_index) not in seen_threads and (node.inorder_index, neighbor.inorder_index) not in seen_threads:
+            if correct_neighbor is None:
+                mistakes.append(Mistake(scorings, "Extra thread"))
+                seen_threads.add((node.inorder_index, neighbor.inorder_index) if node.next is neighbor else (neighbor.inorder_index, node.inorder_index))
+            else:
+                threads_exist_and_dont_match = (
+                    neighbor.matching_node_index is not None
+                    and correct_neighbor.matching_node_index is not None
+                    and neighbor.matching_node_index != correct_neighbor.matching_node_index
+                )
+
+                if threads_exist_and_dont_match:
+                    mistakes.append(Mistake(scorings, "Thread doesn't match the correct one"))
+                    seen_threads.add((node.inorder_index, neighbor.inorder_index) if node.next is neighbor else (neighbor.inorder_index, node.inorder_index))
+                            
+        return mistakes
 
 
 class GivenJSONParser:
