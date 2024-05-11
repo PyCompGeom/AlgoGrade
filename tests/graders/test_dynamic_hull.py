@@ -34,26 +34,25 @@ def test_dynamic_hull_grader_all_correct():
     root.right = DynamicHullNode.leaf(p3)
     tree = DynamicHullTree(root)
     
-    optimized_tree = deepcopy(tree)
-    optimized_tree.root.optimized_subhull = optimized_tree.root.subhull
-    optimized_tree.root.left.optimized_subhull = SubhullThreadedBinTree.empty()
-    optimized_tree.root.left.left.optimized_subhull = SubhullThreadedBinTree.empty()
-    optimized_tree.root.left.right.optimized_subhull = SubhullThreadedBinTree.empty()
-    optimized_tree.root.right.optimized_subhull = SubhullThreadedBinTree.empty()
+    tree.root.optimized_subhull = tree.root.subhull
+    tree.root.left.optimized_subhull = SubhullThreadedBinTree.empty()
+    tree.root.left.left.optimized_subhull = SubhullThreadedBinTree.empty()
+    tree.root.left.right.optimized_subhull = SubhullThreadedBinTree.empty()
+    tree.root.right.optimized_subhull = SubhullThreadedBinTree.empty()
     
     leaves = [root.left.left, root.left.right, root.right]
     path = [PathDirection.right]
     hull = [p1, p2, point_to_insert, p3]
 
-    optimized_tree2 = deepcopy(optimized_tree)
-    optimized_tree2.root.subhull = SubhullThreadedBinTree.from_iterable(hull)
-    optimized_tree2.root.optimized_subhull = optimized_tree2.root.subhull
-    optimized_tree2.root.right = DynamicHullNode(point_to_insert, [point_to_insert, p3])
-    optimized_tree2.root.right.optimized_subhull = SubhullThreadedBinTree.empty()
-    optimized_tree2.root.right.left = DynamicHullNode.leaf(point_to_insert)
-    optimized_tree2.root.right.left.optimized_subhull = SubhullThreadedBinTree.empty()
-    optimized_tree2.root.right.right = DynamicHullNode.leaf(p3)
-    optimized_tree2.root.right.right.optimized_subhull = SubhullThreadedBinTree.empty()
+    modified_tree = deepcopy(tree)
+    modified_tree.root.subhull = SubhullThreadedBinTree.from_iterable(hull)
+    modified_tree.root.optimized_subhull = modified_tree.root.subhull
+    modified_tree.root.right = DynamicHullNode(point_to_insert, [point_to_insert, p3])
+    modified_tree.root.right.optimized_subhull = SubhullThreadedBinTree.empty()
+    modified_tree.root.right.left = DynamicHullNode.leaf(point_to_insert)
+    modified_tree.root.right.left.optimized_subhull = SubhullThreadedBinTree.empty()
+    modified_tree.root.right.right = DynamicHullNode.leaf(p3)
+    modified_tree.root.right.right.optimized_subhull = SubhullThreadedBinTree.empty()
 
     pycga_answers = [
         leaves,
@@ -61,9 +60,9 @@ def test_dynamic_hull_grader_all_correct():
         tree,
         tree,
         tree,
-        optimized_tree,
+        tree,
         path,
-        (optimized_tree2, hull)
+        (modified_tree, hull)
     ]
     pydantic_answers = pycga_to_pydantic(pycga_answers)
     answers_wrapper = DynamicHullAnswers.from_iterable(pydantic_answers)
@@ -207,6 +206,7 @@ def test_dynamic_hull_grader_incorrect_subhull_single():
     pycga_answers = deepcopy(correct_pycga_answers)
     pycga_answers[3].root.left_supporting = pycga_answers[2].root.left_supporting
     pycga_answers[3].root.right_supporting = pycga_answers[2].root.right_supporting
+    pycga_answers[3].root.subhull = deepcopy(pycga_answers[3].root.subhull) # to not interfere with optimized_subhull, which, in root, is a reference to subhull
     pycga_answers[3].root.subhull.root.point = Point(100, 100)
 
     pydantic_answers = pycga_to_pydantic(pycga_answers)
@@ -226,6 +226,7 @@ def test_dynamic_hull_grader_incorrect_subhull_repeated():
     pycga_answers = deepcopy(correct_pycga_answers)
     pycga_answers[3].root.left_supporting = pycga_answers[2].root.left_supporting
     pycga_answers[3].root.right_supporting = pycga_answers[2].root.right_supporting
+    pycga_answers[3].root.subhull = deepcopy(pycga_answers[3].root.subhull) # to not interfere with optimized_subhull, which, in root, is a reference to subhull
     pycga_answers[3].root.subhull.root.point = Point(100, 100)
 
     pycga_answers[3].root.left.left_supporting = pycga_answers[2].root.left.left_supporting
@@ -245,9 +246,11 @@ def test_dynamic_hull_grader_incorrect_subhull_repeated():
     assert isclose(total_grade, 2.5)
 
 
-def test_dynamic_hull_grader_incorrect_point_single():
+def test_dynamic_hull_grader_incorrect_left_supporting_index_single():
     pycga_answers = deepcopy(correct_pycga_answers)
-    pycga_answers[4].root.point = Point(100, 100)
+    pycga_answers[4].root.left_supporting = pycga_answers[2].root.left_supporting # getter returns this left_supporting, not subhull[left_supporting_index]
+    pycga_answers[4].root.right_supporting = pycga_answers[2].root.right_supporting
+    pycga_answers[4].root.left_supporting_index = 100
 
     pydantic_answers = pycga_to_pydantic(pycga_answers)
     answers_wrapper = DynamicHullAnswers.from_iterable(pydantic_answers)
@@ -262,10 +265,15 @@ def test_dynamic_hull_grader_incorrect_point_single():
     assert isclose(total_grade, 2.75)
 
 
-def test_dynamic_hull_grader_incorrect_point_repeated():
+def test_dynamic_hull_grader_incorrect_left_supporting_index_repeated():
     pycga_answers = deepcopy(correct_pycga_answers)
-    pycga_answers[4].root.point = Point(100, 100)
-    pycga_answers[4].root.left.point = Point(100, 100)
+    pycga_answers[4].root.left_supporting = pycga_answers[2].root.left_supporting
+    pycga_answers[4].root.right_supporting = pycga_answers[2].root.right_supporting
+    pycga_answers[4].root.left_supporting_index = 100
+
+    pycga_answers[4].root.left.left_supporting = pycga_answers[2].root.left.left_supporting
+    pycga_answers[4].root.left.right_supporting = pycga_answers[2].root.left.right_supporting
+    pycga_answers[4].root.left.left_supporting_index = 100
 
     pydantic_answers = pycga_to_pydantic(pycga_answers)
     answers_wrapper = DynamicHullAnswers.from_iterable(pydantic_answers)
@@ -282,6 +290,7 @@ def test_dynamic_hull_grader_incorrect_point_repeated():
 
 def test_dynamic_hull_grader_incorrect_optimization():
     pycga_answers = deepcopy(correct_pycga_answers)
+    pycga_answers[5].root.subhull = deepcopy(pycga_answers[5].root.subhull) # to prevent being modified when optimized_subhull is modified, which, in root, is a reference to subhull
     pycga_answers[5].root.optimized_subhull.root.point = Point(100, 100)
 
     pydantic_answers = pycga_to_pydantic(pycga_answers)
