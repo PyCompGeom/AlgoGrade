@@ -132,6 +132,9 @@ class BinTreePydanticAdapter(PydanticAdapter):
     
     def traverse_inorder(self):
         return self.root.traverse_inorder() if self.root else []
+    
+    def leaves_inorder(self):
+        return [node for node in self.root.traverse_inorder() if node.left is None and node.right is None]
 
 
 def serialize_threaded_bin_tree_or_its_root(root_or_tree: ThreadedBinTreeNodePydanticAdapter | ThreadedBinTreePydanticAdapter, *args, **kwargs):

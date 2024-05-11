@@ -79,9 +79,7 @@ def test_dynamic_hull_grader_all_correct():
 
 def test_dynamic_hull_grader_incorrect_leaves():
     pycga_answers = deepcopy(correct_pycga_answers)
-    pycga_answers[0] = deepcopy(pycga_answers[0])
-    leaves = pycga_answers[0]
-    leaves[0].data = Point(100, 100)
+    pycga_answers[1].root.left.left.data = Point(100, 100)
 
     pydantic_answers = pycga_to_pydantic(pycga_answers)
     answers_wrapper = DynamicHullAnswers.from_iterable(pydantic_answers)

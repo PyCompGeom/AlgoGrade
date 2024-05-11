@@ -125,7 +125,6 @@ class SubhullThreadedBinTreePydanticAdapter(ThreadedBinTreePydanticAdapter):
 
 
 class DynamicHullAnswers(Answers):
-    leaves: list[DynamicHullNodePydanticAdapter]
     tree: DynamicHullTreePydanticAdapter
     path: list[PathDirection]
     modified_tree: DynamicHullTreePydanticAdapter
@@ -133,15 +132,12 @@ class DynamicHullAnswers(Answers):
 
     @classmethod
     def from_iterable(cls, iterable):
-        leaves, tree, _, _, _, _, path, (modified_tree, hull), *rest = iterable
-        return cls(
-            leaves=leaves, tree=tree,
-            path=path, modified_tree=modified_tree, hull=hull
-        )
+        _, tree, _, _, _, _, path, (modified_tree, hull), *rest = iterable
+        return cls(tree=tree, path=path, modified_tree=modified_tree, hull=hull)
     
     def to_pydantic_list(self):
         return [
-            self.leaves, self.tree, self.tree, self.tree, self.tree,
+            self.tree.leaves_inorder(), self.tree, self.tree, self.tree, self.tree,
             self.tree, self.path, (self.modified_tree, self.hull)
         ]
 
