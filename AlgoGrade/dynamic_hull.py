@@ -50,19 +50,14 @@ class DynamicHullGrader(Grader):
     def grade_omitted_points(cls, answer, correct_answer, scorings):
         def grade_item_method(a, c, gp):
             if not a.is_leaf:
-                subhull = [node.point for node in a.subhull.traverse_inorder()]
-                left_subhull = [node.point for node in a.left.subhull.traverse_inorder()]
-                right_subhull = [node.point for node in a.right.subhull.traverse_inorder()]
-                
-                try:
-                    left_omitted_points = set([point for point in left_subhull[left_subhull.index(a.left_supporting)+1:]])
-                    right_omitted_points = set([point for point in right_subhull[:right_subhull.index(a.right_supporting)]])
+                correct_subhull = {node.point for node in c.subhull.traverse_inorder()}
+                correct_left_subhull = {node.point for node in c.left.subhull.traverse_inorder()}
+                correct_right_subhull = {node.point for node in c.right.subhull.traverse_inorder()}
+                correct_omitted_points = (correct_left_subhull | correct_right_subhull) - correct_subhull
 
-                    subhull = set(subhull)
-                    if subhull & (left_omitted_points | right_omitted_points):
-                        return [Mistake(gp)]
-                except (IndexError, ValueError):
-                    return [Mistake(gp)]
+                subhull = {node.point for node in a.subhull.traverse_inorder()}
+                if non_omitted_points := subhull & correct_omitted_points:
+                    return [Mistake(gp)] * len(non_omitted_points)
 
             return []
         
