@@ -1,6 +1,5 @@
 from typing import Any
 from AlgoGrade.core import Scoring, Grader, Answers
-from AlgoGrade.adapters import pycga_to_pydantic
 
 
 class MockGrader(Grader):
@@ -20,7 +19,7 @@ class MockAnswers(Answers):
     def from_iterable(cls, iterable):
         return cls(list=iterable)
     
-    def to_pydantic_list(self):
+    def to_algogears_list(self):
         return self.list
 
 
@@ -32,20 +31,16 @@ scorings = [
 
 
 def test_grader1():
-    pycga_answers = [1, 2, (3, 4)]
-    correct_pycga_answers = pycga_answers
+    algogears_answers = [1, 2, (3, 4)]
+    correct_algogears_answers = algogears_answers
 
-    total_grade, answer_grades = MockGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
-    assert total_grade == 30
-    assert answer_grades == [(1, 10), (2, 10), ((3, 4), 10)]
-
-    total_grade, answer_grades = MockGrader.grade_pydantic(pycga_to_pydantic(pycga_answers), pycga_to_pydantic(correct_pycga_answers), scorings)
+    total_grade, answer_grades = MockGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert total_grade == 30
     assert answer_grades == [(1, 10), (2, 10), ((3, 4), 10)]
 
     total_grade, answer_grades = MockGrader.grade_answers_wrapper(
-        MockAnswers.from_iterable(pycga_answers),
-        MockAnswers.from_iterable(correct_pycga_answers),
+        MockAnswers.from_iterable(algogears_answers),
+        MockAnswers.from_iterable(correct_algogears_answers),
         scorings
     )
     assert total_grade == 30
@@ -53,20 +48,16 @@ def test_grader1():
 
 
 def test_grader2():
-    pycga_answers = [1, 2, (3, 4)]
-    correct_pycga_answers = [1, 3, (3, 4)]
+    algogears_answers = [1, 2, (3, 4)]
+    correct_algogears_answers = [1, 3, (3, 4)]
 
-    total_grade, answer_grades = MockGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
-    assert total_grade == 25
-    assert answer_grades == [(1, 10), (2, 5), ((3, 4), 10)]
-
-    total_grade, answer_grades = MockGrader.grade_pydantic(pycga_to_pydantic(pycga_answers), pycga_to_pydantic(correct_pycga_answers), scorings)
+    total_grade, answer_grades = MockGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert total_grade == 25
     assert answer_grades == [(1, 10), (2, 5), ((3, 4), 10)]
 
     total_grade, answer_grades = MockGrader.grade_answers_wrapper(
-        MockAnswers.from_iterable(pycga_answers),
-        MockAnswers.from_iterable(correct_pycga_answers),
+        MockAnswers.from_iterable(algogears_answers),
+        MockAnswers.from_iterable(correct_algogears_answers),
         scorings
     )
     assert total_grade == 25
@@ -74,20 +65,16 @@ def test_grader2():
 
 
 def test_grader3():
-    pycga_answers = [1, 2, (3, 4)]
-    correct_pycga_answers = [1, 2, (0, 0)]
+    algogears_answers = [1, 2, (3, 4)]
+    correct_algogears_answers = [1, 2, (0, 0)]
 
-    total_grade, answer_grades = MockGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
-    assert total_grade == 23
-    assert answer_grades == [(1, 10), (2, 10), ((3, 4), 3)]
-
-    total_grade, answer_grades = MockGrader.grade_pydantic(pycga_to_pydantic(pycga_answers), pycga_to_pydantic(correct_pycga_answers), scorings)
+    total_grade, answer_grades = MockGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert total_grade == 23
     assert answer_grades == [(1, 10), (2, 10), ((3, 4), 3)]
 
     total_grade, answer_grades = MockGrader.grade_answers_wrapper(
-        MockAnswers.from_iterable(pycga_answers),
-        MockAnswers.from_iterable(correct_pycga_answers),
+        MockAnswers.from_iterable(algogears_answers),
+        MockAnswers.from_iterable(correct_algogears_answers),
         scorings
     )
     assert total_grade == 23

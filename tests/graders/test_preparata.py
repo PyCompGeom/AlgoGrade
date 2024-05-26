@@ -1,13 +1,12 @@
 from math import isclose
 from copy import deepcopy
-from PyCompGeomAlgorithms.core import Point, PathDirection
-from PyCompGeomAlgorithms.preparata import PreparataThreadedBinTree
+from algogears.core import Point, PathDirection
+from algogears.preparata import PreparataThreadedBinTree
 from AlgoGrade.preparata import PreparataGrader, PreparataTask, PreparataAnswers
-from AlgoGrade.adapters import pycga_to_pydantic
 from AlgoGrade.core import Scoring
 
 
-points = [Point(1, 1), Point(1, 5), Point(5, 3), Point(1, 11), Point(6, 1), Point(10, 1)]
+points = [Point.new(1, 1), Point.new(1, 5), Point.new(5, 3), Point.new(1, 11), Point.new(6, 1), Point.new(10, 1)]
 givens = (points,)
 task_class = PreparataTask
 scorings = [
@@ -16,14 +15,13 @@ scorings = [
     Scoring(max_grade=0.25, fine=0.25, repeat_fine=1),
     Scoring(max_grade=0.25, fine=0.25, repeat_fine=1.5)
 ]
-correct_pycga_answers = task_class.solve_as_pycga_list(givens)
-correct_pydantic_answers = task_class.solve_as_pydantic_list(givens)
+correct_algogears_answers = task_class.solve_as_algogears_list(givens)
 correct_answers_wrapper = task_class.solve_as_answers_wrapper(givens)
 
 
 def test_preparata_all_correct():
-    hull0 = [Point(1, 1), Point(1, 5), Point(5, 3)]
-    hull = [Point(1, 1), Point(1, 11), Point(10, 1)]
+    hull0 = [Point.new(1, 1), Point.new(1, 5), Point.new(5, 3)]
+    hull = [Point.new(1, 1), Point.new(1, 11), Point.new(10, 1)]
     tree0 = PreparataThreadedBinTree.from_iterable(hull0)
     left_paths = [
         [PathDirection.right],
@@ -36,31 +34,27 @@ def test_preparata_all_correct():
         []
     ]
     left_supporting_points = [
-        Point(5, 3),
-        Point(1, 1),
-        Point(1, 1)
+        Point.new(5, 3),
+        Point.new(1, 1),
+        Point.new(1, 1)
     ]
     right_supporting_points = [
-        Point(1, 1),
-        Point(1, 11),
-        Point(1, 11)
+        Point.new(1, 1),
+        Point.new(1, 11),
+        Point.new(1, 11)
     ]
-    deleted_points = [[Point(1, 5)], [Point(5, 3)], [Point(6, 1)]]
+    deleted_points = [[Point.new(1, 5)], [Point.new(5, 3)], [Point.new(6, 1)]]
     hulls = [
-        [Point(1, 1), Point(1, 11), Point(5, 3)],
-        [Point(1, 1), Point(1, 11), Point(6, 1)],
+        [Point.new(1, 1), Point.new(1, 11), Point.new(5, 3)],
+        [Point.new(1, 1), Point.new(1, 11), Point.new(6, 1)],
         hull
     ]
     trees = [PreparataThreadedBinTree.from_iterable(hulls[0]), PreparataThreadedBinTree.from_iterable(hulls[1])]
 
-    pycga_answers = [(hull0, tree0), ((left_paths, left_supporting_points), (right_paths, right_supporting_points)), deleted_points, (hulls, trees)]
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    algogears_answers = [(hull0, tree0), ((left_paths, left_supporting_points), (right_paths, right_supporting_points)), deleted_points, (hulls, trees)]
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
-    assert isclose(total_grade, 1)
-
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 1)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -68,18 +62,17 @@ def test_preparata_all_correct():
 
 
 def test_preparata_grader_incorrect_first_hull():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    first_hull = pycga_answers[0][0]
-    first_hull[0] = Point(100, 100)
+    first_hull = algogears_answers[0][0]
+    first_hull[0] = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -87,18 +80,17 @@ def test_preparata_grader_incorrect_first_hull():
 
 
 def test_preparata_grader_incorrect_first_tree():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    first_tree = pycga_answers[0][1]
-    first_tree.root.data = Point(100, 100)
+    first_tree = algogears_answers[0][1]
+    first_tree.root.data = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -106,18 +98,17 @@ def test_preparata_grader_incorrect_first_tree():
 
 
 def test_preparata_grader_incorrect_left_paths_single():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    left_paths = pycga_answers[1][0][0]
+    left_paths = algogears_answers[1][0][0]
     left_paths[0][0] = PathDirection.left
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -125,19 +116,18 @@ def test_preparata_grader_incorrect_left_paths_single():
 
 
 def test_preparata_grader_incorrect_left_paths_repeated():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    left_paths = pycga_answers[1][0][0]
+    left_paths = algogears_answers[1][0][0]
     left_paths[1][0] = PathDirection.left
     left_paths[1][1] = PathDirection.left
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -145,18 +135,17 @@ def test_preparata_grader_incorrect_left_paths_repeated():
 
 
 def test_preparata_grader_incorrect_right_paths_single():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    right_paths = pycga_answers[1][1][0]
+    right_paths = algogears_answers[1][1][0]
     right_paths[0][0] = PathDirection.right
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -164,19 +153,18 @@ def test_preparata_grader_incorrect_right_paths_single():
 
 
 def test_preparata_grader_incorrect_right_paths_repeated():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    right_paths = pycga_answers[1][1][0]
+    right_paths = algogears_answers[1][1][0]
     right_paths[0][0] = PathDirection.right
     right_paths[1].append(PathDirection.right)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -184,20 +172,19 @@ def test_preparata_grader_incorrect_right_paths_repeated():
 
 
 def test_preparata_grader_incorrect_left_and_right_paths():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    left_paths = pycga_answers[1][0][0]
-    right_paths = pycga_answers[1][1][0]
+    left_paths = algogears_answers[1][0][0]
+    right_paths = algogears_answers[1][1][0]
     left_paths[0][0] = PathDirection.left
     right_paths[0][0] = PathDirection.right
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -205,18 +192,17 @@ def test_preparata_grader_incorrect_left_and_right_paths():
 
 
 def test_preparata_grader_incorrect_left_supporting_points_single():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    left_supporting_points = pycga_answers[1][0][1]
-    left_supporting_points[0] = Point(100, 100)
+    left_supporting_points = algogears_answers[1][0][1]
+    left_supporting_points[0] = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -224,19 +210,18 @@ def test_preparata_grader_incorrect_left_supporting_points_single():
 
 
 def test_preparata_grader_incorrect_left_supporting_points_repeated():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    left_supporting_points = pycga_answers[1][0][1]
-    left_supporting_points[0] = Point(100, 100)
-    left_supporting_points[1] = Point(100, 100)
+    left_supporting_points = algogears_answers[1][0][1]
+    left_supporting_points[0] = Point.new(100, 100)
+    left_supporting_points[1] = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -244,18 +229,17 @@ def test_preparata_grader_incorrect_left_supporting_points_repeated():
 
 
 def test_preparata_grader_incorrect_right_supporting_points_single():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    right_supporting_points = pycga_answers[1][1][1]
-    right_supporting_points[0] = Point(100, 100)
+    right_supporting_points = algogears_answers[1][1][1]
+    right_supporting_points[0] = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -263,19 +247,18 @@ def test_preparata_grader_incorrect_right_supporting_points_single():
 
 
 def test_preparata_grader_incorrect_right_supporting_points_repeated():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    right_supporting_points = pycga_answers[1][1][1]
-    right_supporting_points[0] = Point(100, 100)
-    right_supporting_points[1] = Point(100, 100)
+    right_supporting_points = algogears_answers[1][1][1]
+    right_supporting_points[0] = Point.new(100, 100)
+    right_supporting_points[1] = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -283,20 +266,19 @@ def test_preparata_grader_incorrect_right_supporting_points_repeated():
 
 
 def test_preparata_grader_incorrect_left_and_right_supporting_points():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    left_supporting_points = pycga_answers[1][0][1]
-    right_supporting_points = pycga_answers[1][1][1]
-    left_supporting_points[0] = Point(100, 100)
-    right_supporting_points[0] = Point(100, 100)
+    left_supporting_points = algogears_answers[1][0][1]
+    right_supporting_points = algogears_answers[1][1][1]
+    left_supporting_points[0] = Point.new(100, 100)
+    right_supporting_points[0] = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -304,19 +286,18 @@ def test_preparata_grader_incorrect_left_and_right_supporting_points():
 
 
 def test_preparata_grader_incorrect_left_paths_and_left_supporting_points():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    left_paths, left_supporting_points = pycga_answers[1][0]
+    left_paths, left_supporting_points = algogears_answers[1][0]
     left_paths[0][0] = PathDirection.left
-    left_supporting_points[0] = Point(100, 100)
+    left_supporting_points[0] = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -324,20 +305,19 @@ def test_preparata_grader_incorrect_left_paths_and_left_supporting_points():
 
 
 def test_preparata_grader_incorrect_left_paths_and_right_supporting_points():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    left_paths = pycga_answers[1][0][0]
-    right_supporting_points = pycga_answers[1][1][1]
+    left_paths = algogears_answers[1][0][0]
+    right_supporting_points = algogears_answers[1][1][1]
     left_paths[0][0] = PathDirection.left
-    right_supporting_points[0] = Point(100, 100)
+    right_supporting_points[0] = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -345,20 +325,19 @@ def test_preparata_grader_incorrect_left_paths_and_right_supporting_points():
 
 
 def test_preparata_grader_incorrect_right_paths_and_left_supporting_points():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    right_paths = pycga_answers[1][1][0]
-    left_supporting_points = pycga_answers[1][0][1]
+    right_paths = algogears_answers[1][1][0]
+    left_supporting_points = algogears_answers[1][0][1]
     right_paths[0][0] = PathDirection.right
-    left_supporting_points[0] = Point(100, 100)
+    left_supporting_points[0] = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -366,19 +345,18 @@ def test_preparata_grader_incorrect_right_paths_and_left_supporting_points():
 
 
 def test_preparata_grader_incorrect_right_paths_and_right_supporting_points():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    right_paths, right_supporting_points = pycga_answers[1][1]
+    right_paths, right_supporting_points = algogears_answers[1][1]
     right_paths[0][0] = PathDirection.right
-    right_supporting_points[0] = Point(100, 100)
+    right_supporting_points[0] = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -386,18 +364,17 @@ def test_preparata_grader_incorrect_right_paths_and_right_supporting_points():
 
 
 def test_preparata_grader_incorrect_deleted_points_single():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    deleted_points = pycga_answers[2]
-    deleted_points[0][0] = Point(100, 100)
+    deleted_points = algogears_answers[2]
+    deleted_points[0][0] = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -405,19 +382,18 @@ def test_preparata_grader_incorrect_deleted_points_single():
 
 
 def test_preparata_grader_incorrect_deleted_points_repeated():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    deleted_points = pycga_answers[2]
-    deleted_points[0][0] = Point(100, 100)
-    deleted_points[1][0] = Point(100, 100)
+    deleted_points = algogears_answers[2]
+    deleted_points[0][0] = Point.new(100, 100)
+    deleted_points[1][0] = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -425,18 +401,17 @@ def test_preparata_grader_incorrect_deleted_points_repeated():
 
 
 def test_preparata_grader_incorrect_hulls_single():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    hulls = pycga_answers[3][0]
-    hulls[0][0] = Point(100, 100)
+    hulls = algogears_answers[3][0]
+    hulls[0][0] = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -444,19 +419,18 @@ def test_preparata_grader_incorrect_hulls_single():
 
 
 def test_preparata_grader_incorrect_hulls_repeated():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    hulls = pycga_answers[3][0]
-    hulls[0][0] = Point(100, 100)
-    hulls[1][1] = Point(100, 100)
+    hulls = algogears_answers[3][0]
+    hulls[0][0] = Point.new(100, 100)
+    hulls[1][1] = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -464,18 +438,17 @@ def test_preparata_grader_incorrect_hulls_repeated():
 
 
 def test_preparata_grader_incorrect_trees_single():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    trees = pycga_answers[3][1]
-    trees[0].root.left.data = Point(100, 100)
+    trees = algogears_answers[3][1]
+    trees[0].root.left.data = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, 0.75)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -483,20 +456,19 @@ def test_preparata_grader_incorrect_trees_single():
 
 
 def test_preparata_grader_incorrect_trees_repeated():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    trees = pycga_answers[3][1]
-    trees[0].root.data = Point(100, 100)
-    trees[0].root.left.data = Point(-1, -1)
-    trees[1].root.data = Point(100, 100)
+    trees = algogears_answers[3][1]
+    trees[0].root.data = Point.new(100, 100)
+    trees[0].root.left.data = Point.new(-1, -1)
+    trees[1].root.data = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)
@@ -504,24 +476,23 @@ def test_preparata_grader_incorrect_trees_repeated():
 
 
 def test_preparata_grader_incorrect_trees_and_hulls():
-    pycga_answers = deepcopy(correct_pycga_answers)
+    algogears_answers = deepcopy(correct_algogears_answers)
     
-    hulls = pycga_answers[3][0]
-    hulls[0][0] = Point(100, 100)
-    hulls[1][1] = Point(100, 100)
+    hulls = algogears_answers[3][0]
+    hulls[0][0] = Point.new(100, 100)
+    hulls[1][1] = Point.new(100, 100)
     
-    trees = pycga_answers[3][1]
-    trees[0].root.data = Point(100, 100)
-    trees[0].root.left.data = Point(-1, -1)
-    trees[1].root.data = Point(100, 100)
+    trees = algogears_answers[3][1]
+    trees[0].root.data = Point.new(100, 100)
+    trees[0].root.left.data = Point.new(-1, -1)
+    trees[1].root.data = Point.new(100, 100)
 
-    pydantic_answers = pycga_to_pydantic(pycga_answers)
-    answers_wrapper = PreparataAnswers.from_iterable(pydantic_answers)
+    answers_wrapper = PreparataAnswers.from_iterable(algogears_answers)
 
-    total_grade, answer_grades = PreparataGrader.grade_pycga(pycga_answers, correct_pycga_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
-    total_grade, answer_grades = PreparataGrader.grade_pydantic(pydantic_answers, correct_pydantic_answers, scorings)
+    total_grade, answer_grades = PreparataGrader.grade_algogears(algogears_answers, correct_algogears_answers, scorings)
     assert isclose(total_grade, -0.5)
 
     total_grade, answer_grades = PreparataGrader.grade_answers_wrapper(answers_wrapper, correct_answers_wrapper, scorings)

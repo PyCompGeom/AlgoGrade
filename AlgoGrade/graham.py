@@ -1,6 +1,5 @@
-from typing import ClassVar
-from PyCompGeomAlgorithms.graham import graham, GrahamStepsTableRow, GrahamStepsTable
-from .adapters import pycga_to_pydantic, pydantic_to_pycga, PydanticAdapter, PointPydanticAdapter
+from algogears.core import Point
+from algogears.graham import graham, GrahamStepsTableRow, GrahamStepsTable
 from .core import Task, Grader, Mistake, Answers
 from .parsers import PointListGivenJSONParser
 
@@ -23,7 +22,7 @@ class GrahamGrader(Grader):
     def grade_angles_less_than_pi(cls, answer, correct_answer, scorings):
         return [
             Mistake(scorings)
-            for row, next_row in zip(answer, answer[1:])
+            for row, next_row in zip(answer.rows, answer.rows[1:])
             if row.is_angle_less_than_pi and (
                 row.point_triple[1] != next_row.point_triple[0] or
                 row.point_triple[2] != next_row.point_triple[1] or
@@ -35,7 +34,7 @@ class GrahamGrader(Grader):
     def grade_angles_greater_than_or_equal_to_pi(cls, answer, correct_answer, scorings):
         return [
             Mistake(scorings)
-            for row, next_row in zip(answer, answer[1:])
+            for row, next_row in zip(answer.rows, answer.rows[1:])
             if not row.is_angle_less_than_pi and (
                 (
                     row.point_triple[0] != next_row.point_triple[0] or
@@ -54,7 +53,7 @@ class GrahamGrader(Grader):
     def grade_finalization(cls, answer, correct_answer, scorings):
         return [
             Mistake(scorings)
-            for row in answer
+            for row in answer.rows
             if row.point_triple[1] == answer.ordered_points[0]
         ]
     
@@ -75,40 +74,12 @@ class GrahamGrader(Grader):
             return None
 
 
-class GrahamStepsTableRowPydanticAdapter(PydanticAdapter):
-    regular_class: ClassVar[type] = GrahamStepsTableRow
-    point_triple: tuple[PointPydanticAdapter, PointPydanticAdapter, PointPydanticAdapter]
-    is_angle_less_than_pi: bool
-
-    @classmethod
-    def from_regular_object(cls, obj: GrahamStepsTableRow, **kwargs):
-        return cls(
-            point_triple=pycga_to_pydantic(obj.point_triple),
-            is_angle_less_than_pi=obj.is_angle_less_than_pi,
-            **kwargs
-        )
-
-
-class GrahamStepsTablePydanticAdapter(PydanticAdapter):
-    regular_class: ClassVar[type] = GrahamStepsTable
-    ordered_points: list[PointPydanticAdapter]
-    rows: list[GrahamStepsTableRowPydanticAdapter]
-
-    @classmethod
-    def from_regular_object(cls, obj: GrahamStepsTable, **kwargs):
-        return cls(
-            ordered_points=pycga_to_pydantic(obj.ordered_points),
-            rows=pycga_to_pydantic(obj.rows),
-            **kwargs
-        )
-
-
 class GrahamAnswers(Answers):
-    centroid: PointPydanticAdapter
-    ordered_points: list[PointPydanticAdapter]
-    origin: PointPydanticAdapter
-    steps_table: GrahamStepsTablePydanticAdapter
-    point_triples_: list[tuple[PointPydanticAdapter, PointPydanticAdapter, PointPydanticAdapter]] | None = None
+    centroid: Point
+    ordered_points: list[Point]
+    origin: Point
+    steps_table: GrahamStepsTable
+    point_triples_: list[tuple[Point, Point, Point]] | None = None
     are_angles_less_than_pi_: list[bool] | None = None
 
     @classmethod
@@ -124,7 +95,7 @@ class GrahamAnswers(Answers):
     def are_angles_less_than_pi(self):
         return self.are_angles_less_than_pi_ or [row.is_angle_less_than_pi for row in self.steps_table.rows]
 
-    def to_pydantic_list(self):
+    def to_algogears_list(self):
         return [
             self.centroid, self.ordered_points, self.origin, self.point_triples,
             self.are_angles_less_than_pi, self.steps_table, self.steps_table, self.steps_table

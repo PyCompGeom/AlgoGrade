@@ -1,9 +1,9 @@
 from collections import Counter
 from functools import partial
 from operator import eq
-from typing import Iterable, Callable, Type, Any
+from typing import Iterable, Generator, Type, Any
 from pydantic import BaseModel
-from .adapters import pycga_to_pydantic, pydantic_to_pycga, SerializablePydanticModelWithPydanticFields
+from algogears.core import SerializablePydanticModelWithPydanticFields
 
 
 class Answers(SerializablePydanticModelWithPydanticFields):
@@ -11,11 +11,8 @@ class Answers(SerializablePydanticModelWithPydanticFields):
     def from_iterable(cls, iterable):
         raise NotImplementedError
     
-    def to_pydantic_list(self):
+    def to_algogears_list(self):
         raise NotImplementedError
-    
-    def to_pycga_list(self):
-        return pydantic_to_pycga(self.to_pydantic_list())
 
 
 class Mistake:
@@ -51,10 +48,10 @@ class Grader:
         raise NotImplementedError
 
     @classmethod
-    def grade_pycga(cls, answers, correct_answers, scorings):
+    def grade_algogears(cls, answers, correct_answers, scorings):
         """
-            Compare answers to correct_answers (both in PyCGA format) an return a tuple
-            `(total_grade, answers_grades)`, where answers_grades is a list of tuples--grades for each answer `(answer, grade)` in PyCGA format.
+            Compare answers to correct_answers (both in AlgoGEARS format) an return a tuple
+            `(total_grade, answers_grades)`, where answers_grades is a list of tuples--grades for each answer `(answer, grade)` in AlgoGEARS format.
         """
         mistake_lists = [
             grading_method(answer, correct_answer, scorings)
@@ -80,24 +77,15 @@ class Grader:
         return total_grade, answers_grades
     
     @classmethod
-    def grade_pydantic(cls, answers, correct_answers, scorings):
-        """
-            Compare answers to correct_answers (both in PydanticAdapter format) an return a tuple
-            `(total_grade, answers_grades)`, where answers_grades is a list of tuples--grades for each answer `(answer, grade)` in PydanticAdapter format.
-        """
-        total_grade, answers_grades = cls.grade_pycga(pydantic_to_pycga(answers), pydantic_to_pycga(correct_answers), scorings)
-        return total_grade, [(pycga_to_pydantic(answer), grade) for answer, grade in answers_grades]
-    
-    @classmethod
     def grade_answers_wrapper(cls, answers: Answers, correct_answers: Answers, scorings):
         """
-            Compare answers to correct_answers (both in Answers format) an return a tuple
-            `(total_grade, answers_grades)`, where answers_grades is a list of tuples--grades for each answer `(answer, grade)` in PydanticAdapter format.
+            Compare answers to correct_answers (both in Answers format) and return a tuple
+            `(total_grade, answers_grades)`, where answers_grades is a list of tuples--grades for each answer `(answer, grade)` in Answers format.
         """
-        return cls.grade_pydantic(answers.to_pydantic_list(), correct_answers.to_pydantic_list(), scorings)
+        return cls.grade_algogears(answers.to_algogears_list(), correct_answers.to_algogears_list(), scorings)
     
     @classmethod
-    def grade_object(cls, answer, correct_answer, scorings, item_mistake_text="", custom_eq=eq):
+    def grade_object(cls, answer, correct_answer, scorings, custom_eq=eq):
         """
             The most basic method for grading an object compared to the correct one, using customizable equality.
             
@@ -105,10 +93,10 @@ class Grader:
 
             Returns an empty list if the equality holds, and a list containing a mistake otherwise.
         """
-        return [] if custom_eq(answer, correct_answer) else [Mistake(scorings, description=item_mistake_text)]
+        return [] if custom_eq(answer, correct_answer) else [Mistake(scorings, "Objects don't match")]
 
     @classmethod
-    def grade_iterable(cls, answer, correct_answer, scorings, grade_item_method=None, item_mistake_text=""):
+    def grade_iterable(cls, answer, correct_answer, scorings, grade_item_method=None):
         if grade_item_method is None:
             grade_item_method = cls.grade_object
         if callable(grade_item_method):
@@ -119,23 +107,23 @@ class Grader:
         len_diff = len(correct_answer) - len(answer)
         if len_diff == 0:
             return flatten([
-                g(a, c, scorings, item_mistake_text=item_mistake_text)
+                g(a, c, scorings)
                 for g, a, c in zip(grade_item_method, answer, correct_answer)
             ])
 
         return [Mistake(scorings, description=f"Too {'few' if len_diff < 0 else 'many'} items")] * abs(len_diff)
 
     @classmethod
-    def grade_bin_tree(cls, answer, correct_answer, scorings, grade_item_method=None, item_mistake_text=""):
+    def grade_bin_tree(cls, answer, correct_answer, scorings, grade_item_method=None):
         if grade_item_method is None:
             grade_item_method = partial(cls.grade_object, custom_eq=lambda a, c: c.weak_equal(a))
         
-        return cls._find_mistakes_in_bin_tree(answer.root, correct_answer.root, scorings, grade_item_method, item_mistake_text)
+        return cls._find_mistakes_in_bin_tree(answer.root, correct_answer.root, scorings, grade_item_method)
 
     @classmethod
     def _find_mistakes_in_bin_tree(
         cls, node, correct_node, scorings,
-        grade_item_method=None, item_mistake_text="", mistakes=None, mistakes_extra=None, mistakes_missing=None
+        grade_item_method=None, mistakes=None, mistakes_extra=None, mistakes_missing=None
     ):
         if mistakes is None:
             mistakes = []
@@ -146,22 +134,22 @@ class Grader:
         
         mistakes.extend(grade_item_method(node, correct_node, scorings))
 
-        cls._find_mistakes_in_subtree(node.left, correct_node.left, scorings, grade_item_method, item_mistake_text, mistakes, mistakes_extra, mistakes_missing)
-        cls._find_mistakes_in_subtree(node.right, correct_node.right, scorings, grade_item_method, item_mistake_text, mistakes, mistakes_extra, mistakes_missing)
+        cls._find_mistakes_in_subtree(node.left, correct_node.left, scorings, grade_item_method, mistakes, mistakes_extra, mistakes_missing)
+        cls._find_mistakes_in_subtree(node.right, correct_node.right, scorings, grade_item_method, mistakes, mistakes_extra, mistakes_missing)
 
         return mistakes + mistakes_extra + mistakes_missing
 
     @classmethod
-    def _find_mistakes_in_subtree(cls, node, correct_node, scorings, grade_item_method, item_mistake_text, mistakes, extra, missing):
+    def _find_mistakes_in_subtree(cls, node, correct_node, scorings, grade_item_method, mistakes, extra, missing):
         if node and correct_node:
-            cls._find_mistakes_in_bin_tree(node, correct_node, scorings, grade_item_method, item_mistake_text, mistakes, extra, missing)
+            cls._find_mistakes_in_bin_tree(node, correct_node, scorings, grade_item_method, mistakes, extra, missing)
         if node and not correct_node:
             extra.extend(Mistake(scorings, "Extra item") for _ in node.traverse_inorder())
         if not node and correct_node:
             missing.extend(Mistake(scorings, "Missing item") for _ in correct_node.traverse_inorder())
 
     @classmethod
-    def grade_threaded_bin_tree(cls, answer, correct_answer, scorings, grade_item_method=None, item_mistake_text=""):
+    def grade_threaded_bin_tree(cls, answer, correct_answer, scorings, grade_item_method=None):
         if grade_item_method is None:
             grade_item_method = partial(cls.grade_object, custom_eq=lambda a, c: c.weak_equal(a))
 
@@ -174,7 +162,7 @@ class Grader:
         matching_nodes, correct_matching_nodes = [], []
         seen_threads = set()
         mistakes = cls._find_mistakes_in_threaded_bin_tree(
-            node=answer.root, correct_node=correct_answer.root, scorings=scorings, grade_item_method=grade_item_method, item_mistake_text=item_mistake_text,
+            node=answer.root, correct_node=correct_answer.root, scorings=scorings, grade_item_method=grade_item_method,
             matching_nodes=matching_nodes, correct_matching_nodes=correct_matching_nodes, seen_threads=seen_threads
         )
 
@@ -202,7 +190,7 @@ class Grader:
     @classmethod
     def _find_mistakes_in_threaded_bin_tree(
         cls, node, correct_node, scorings,
-        grade_item_method=None, item_mistake_text="", mistakes=None, mistakes_extra=None, mistakes_missing=None,
+        grade_item_method=None, mistakes=None, mistakes_extra=None, mistakes_missing=None,
         matching_nodes_counter=None, matching_nodes=None, correct_matching_nodes=None, seen_threads=None
     ):
         if mistakes is None:
@@ -229,15 +217,15 @@ class Grader:
         matching_nodes.append(node)
         correct_matching_nodes.append(correct_node)
 
-        cls._find_mistakes_in_threaded_subtree(node.left, correct_node.left, scorings, grade_item_method, item_mistake_text, mistakes, mistakes_extra, mistakes_missing, matching_nodes_counter, matching_nodes, correct_matching_nodes, seen_threads)
-        cls._find_mistakes_in_threaded_subtree(node.right, correct_node.right, scorings, grade_item_method, item_mistake_text, mistakes, mistakes_extra, mistakes_missing, matching_nodes_counter, matching_nodes, correct_matching_nodes, seen_threads)
+        cls._find_mistakes_in_threaded_subtree(node.left, correct_node.left, scorings, grade_item_method, mistakes, mistakes_extra, mistakes_missing, matching_nodes_counter, matching_nodes, correct_matching_nodes, seen_threads)
+        cls._find_mistakes_in_threaded_subtree(node.right, correct_node.right, scorings, grade_item_method, mistakes, mistakes_extra, mistakes_missing, matching_nodes_counter, matching_nodes, correct_matching_nodes, seen_threads)
         
         return mistakes + mistakes_extra + mistakes_missing
 
     @classmethod
-    def _find_mistakes_in_threaded_subtree(cls, subtree_root, correct_subtree_root, scorings, grade_item_method, item_mistake_text, mistakes, mistakes_extra, mistakes_missing, matching_nodes_counter, matching_nodes, correct_matching_nodes, seen_threads):
+    def _find_mistakes_in_threaded_subtree(cls, subtree_root, correct_subtree_root, scorings, grade_item_method, mistakes, mistakes_extra, mistakes_missing, matching_nodes_counter, matching_nodes, correct_matching_nodes, seen_threads):
         if subtree_root and correct_subtree_root:
-            cls._find_mistakes_in_threaded_bin_tree(subtree_root, correct_subtree_root, scorings, grade_item_method, item_mistake_text, mistakes, mistakes_extra, mistakes_missing, matching_nodes_counter, matching_nodes, correct_matching_nodes, seen_threads)
+            cls._find_mistakes_in_threaded_bin_tree(subtree_root, correct_subtree_root, scorings, grade_item_method, mistakes, mistakes_extra, mistakes_missing, matching_nodes_counter, matching_nodes, correct_matching_nodes, seen_threads)
         if subtree_root and not correct_subtree_root:
             extra_nodes = subtree_root.traverse_inorder()
             mistakes_extra.extend(Mistake(scorings, "Extra node") for _ in extra_nodes)            
@@ -301,27 +289,21 @@ class GivenJSONParser:
 
 
 class Task:
-    algorithm: Callable = None
+    algorithm: Generator = None
     grader_class: Type[Grader] = None
     answers_class: Type[Answers] = None
     given_parser_class: Type[GivenJSONParser] = None
     
     @classmethod
-    def solve_as_pycga_list(cls, givens: Iterable):
-        """Solves a task with the givens provided in PyCGA format and returns a list of answers in PyCGA format."""
+    def solve_as_algogears_list(cls, givens: Iterable):
+        """Solves a task with the givens provided in AlgoGEARS format and returns a list of answers in PyCGA format."""
         return list(cls.algorithm(*givens))
-    
-    @classmethod
-    def solve_as_pydantic_list(cls, givens: Iterable):
-        """Solves a task with the givens provided in PyCGA format and returns a list of answers in PydanticAdapter format."""
-        pycga_answers = list(cls.solve_as_pycga_list(givens))
-        return pycga_to_pydantic(pycga_answers)
     
     @classmethod
     def solve_as_answers_wrapper(cls, givens: Iterable):
         """Solves a task with the givens provided in PyCGA format and returns answers in form of the respective Answers wrapper."""
-        pydantic_answers = cls.solve_as_pydantic_list(givens)
-        return cls.answers_class.from_iterable(pydantic_answers)
+        algogears_answers = cls.solve_as_algogears_list(givens)
+        return cls.answers_class.from_iterable(algogears_answers)
 
 
 def flatten(iterable):
