@@ -1,12 +1,12 @@
-from PyCompGeomAlgorithms.core import PathDirection
-from AlgoGrade.adapters import PointPydanticAdapter, pydantic_to_pycga
-from AlgoGrade.preparata import PreparataNodePydanticAdapter, PreparataThreadedBinTreePydanticAdapter, PreparataAnswers
+from algogears.core import PathDirection, Point
+from algogears.preparata import PreparataNode, PreparataThreadedBinTree
+from AlgoGrade.preparata import PreparataAnswers
 
 
 def test_preparata_answers():
-    point = PointPydanticAdapter(coords=(1, 1))
+    point = Point(coords=(1, 1))
     hull = [point]
-    tree = PreparataThreadedBinTreePydanticAdapter(root=PreparataNodePydanticAdapter(data=point))
+    tree = PreparataThreadedBinTree(root=PreparataNode(data=point))
     left_paths, right_paths = [[PathDirection.left]], [[PathDirection.right]]
     left_supporting_points, right_supporting_points = [point], [point]
     deleted_points = []
@@ -19,7 +19,6 @@ def test_preparata_answers():
     )
     answers_list = [(hull, tree), ((left_paths, left_supporting_points), (right_paths, right_supporting_points)), deleted_points, (hulls, trees)]
 
-    assert answers_model.to_pydantic_list() == answers_list
-    assert answers_model.to_pycga_list() == pydantic_to_pycga(answers_list)
+    assert answers_model.to_algogears_list() == answers_list
     assert PreparataAnswers.from_iterable(answers_list) == answers_model
     assert PreparataAnswers(**answers_model.model_dump()) == answers_model

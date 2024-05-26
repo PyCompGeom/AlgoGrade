@@ -1,19 +1,19 @@
-from PyCompGeomAlgorithms.dynamic_hull import PathDirection
-from AlgoGrade.adapters import PointPydanticAdapter, pydantic_to_pycga
-from AlgoGrade.dynamic_hull import DynamicHullAnswers, DynamicHullNodePydanticAdapter, DynamicHullTreePydanticAdapter
+from algogears.core import Point
+from algogears.dynamic_hull import PathDirection, DynamicHullNode, DynamicHullTree
+from AlgoGrade.dynamic_hull import DynamicHullAnswers
 
 
 def test_dynamic_hull_answers():
-    point = PointPydanticAdapter(coords=(1, 1))
+    point = Point(coords=(1, 1))
     hull = [point]
-    root = DynamicHullNodePydanticAdapter(
+    root = DynamicHullNode(
         data=point,
-        subhull_points=hull,
+        subhull=hull,
         left_supporting=point,
         right_supporting=point
     )
     leaves = [root]
-    tree = DynamicHullTreePydanticAdapter(root=root)
+    tree = DynamicHullTree(root=root)
     optimized_tree = tree
     path = [PathDirection.right]
     modified_tree = tree
@@ -24,7 +24,6 @@ def test_dynamic_hull_answers():
     )
     answers_list = [leaves, tree, tree, tree, tree, optimized_tree, path, (modified_tree, hull)]
 
-    assert answers_model.to_pydantic_list() == answers_list
-    assert answers_model.to_pycga_list() == pydantic_to_pycga(answers_list)
+    assert answers_model.to_algogears_list() == answers_list
     assert DynamicHullAnswers.from_iterable(answers_list) == answers_model
     assert DynamicHullAnswers(**answers_model.model_dump()) == answers_model

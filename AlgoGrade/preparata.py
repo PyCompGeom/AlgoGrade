@@ -1,10 +1,8 @@
 from __future__ import annotations
 from functools import partial
-from typing import ClassVar, Optional
-from PyCompGeomAlgorithms.core import PathDirection
-from PyCompGeomAlgorithms.preparata import preparata, PreparataNode, PreparataThreadedBinTree
+from algogears.core import PathDirection, Point
+from algogears.preparata import preparata, PreparataThreadedBinTree
 from .core import Task, Grader, Answers
-from .adapters import PointPydanticAdapter, ThreadedBinTreeNodePydanticAdapter, ThreadedBinTreePydanticAdapter
 from .parsers import PointListGivenJSONParser
 
 
@@ -20,36 +18,16 @@ class PreparataGrader(Grader):
         ]
 
 
-class PreparataNodePydanticAdapter(ThreadedBinTreeNodePydanticAdapter):
-    regular_class: ClassVar[type] = PreparataNode
-    data: PointPydanticAdapter
-    left: Optional[PreparataNodePydanticAdapter] = None
-    right: Optional[PreparataNodePydanticAdapter] = None
-
-    @classmethod
-    def from_regular_object(cls, obj: PreparataNode, **kwargs):
-        return super().from_regular_object(obj, **kwargs)
-
-
-class PreparataThreadedBinTreePydanticAdapter(ThreadedBinTreePydanticAdapter):
-    regular_class: ClassVar[type] = PreparataThreadedBinTree
-    root: PreparataNodePydanticAdapter
-
-    @classmethod
-    def from_regular_object(cls, obj: PreparataThreadedBinTree, **kwargs):
-        return super().from_regular_object(obj, **kwargs)
-
-
 class PreparataAnswers(Answers):
-    hull: list[PointPydanticAdapter]
-    tree: PreparataThreadedBinTreePydanticAdapter
+    hull: list[Point]
+    tree: PreparataThreadedBinTree
     left_paths: list[list[PathDirection]]
     right_paths: list[list[PathDirection]]
-    left_supporting_points: list[PointPydanticAdapter]
-    right_supporting_points: list[PointPydanticAdapter]
-    deleted_points_lists: list[list[PointPydanticAdapter]]
-    hulls: list[list[PointPydanticAdapter]]
-    trees: list[PreparataThreadedBinTreePydanticAdapter]
+    left_supporting_points: list[Point]
+    right_supporting_points: list[Point]
+    deleted_points_lists: list[list[Point]]
+    hulls: list[list[Point]]
+    trees: list[PreparataThreadedBinTree]
 
     @classmethod
     def from_iterable(cls, iterable):
@@ -60,7 +38,7 @@ class PreparataAnswers(Answers):
             deleted_points_lists=deleted_points_lists, hulls=hulls, trees=trees
         )
     
-    def to_pydantic_list(self):
+    def to_algogears_list(self):
         return [
             (self.hull, self.tree),
             ((self.left_paths, self.left_supporting_points), (self.right_paths, self.right_supporting_points)),
